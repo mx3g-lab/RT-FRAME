@@ -1,0 +1,4 @@
+name: rtframe
+build:
+  settings:
+    dts_root: .
