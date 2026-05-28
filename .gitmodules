@@ -1,0 +1,12 @@
+[submodule "middlewares/zephyr"]
+	path = middlewares/zephyr
+	url = https://github.com/zephyrproject-rtos/zephyr
+[submodule "hardware/hal_nxp"]
+	path = hardware/hal_nxp
+	url = https://github.com/zephyrproject-rtos/hal_nxp
+[submodule "hardware/cmsis"]
+	path = hardware/cmsis
+	url = https://github.com/zephyrproject-rtos/cmsis
+[submodule "hardware/cmsis_6"]
+	path = hardware/cmsis_6
+	url = https://github.com/zephyrproject-rtos/CMSIS_6
