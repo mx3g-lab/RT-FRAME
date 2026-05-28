@@ -7,7 +7,7 @@ int main(void)
 
     while (true) {
         k_sleep(K_MSEC(1000));
-        printk("tick\n");
+        printk("tick test\n");
     }
 
     return 0;
