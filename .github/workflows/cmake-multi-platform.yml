@@ -27,13 +27,17 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
     - name: Install system dependencies
       run: |
         sudo apt-get update -qq
         sudo apt-get install -y --no-install-recommends \
           cmake ninja-build device-tree-compiler \
-          python3.13 python3.13-venv python3.13-dev \
-          libpython3-dev gcc g++ curl tar xz-utils
+          gcc g++ curl tar xz-utils
 
     - name: Cache Zephyr SDK
       uses: actions/cache@v4
@@ -56,7 +60,7 @@ jobs:
     - name: Setup Python venv
       if: steps.venv-cache.outputs.cache-hit != 'true'
       run: |
-        python3.13 -m venv .venv
+        python3 -m venv .venv
         .venv/bin/pip install --upgrade pip
         .venv/bin/pip install -r middlewares/zephyr/scripts/requirements.txt
 
@@ -65,6 +69,7 @@ jobs:
         source .venv/bin/activate
         export ZEPHYR_BASE="$(pwd)/middlewares/zephyr"
         export ZEPHYR_MODULES="$(pwd)/hardware/hal_nxp:$(pwd)/hardware/cmsis:$(pwd)/hardware/cmsis_6"
+        export ZEPHYR_SDK_INSTALL_DIR="$(pwd)/toolchain/zephyr-sdk-1.0.0"
         cmake -B build/${{ matrix.target }} -S targets/${{ matrix.target }}
         cmake --build build/${{ matrix.target }} -- -j$(nproc)
 
