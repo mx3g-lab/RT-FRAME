@@ -1,8 +1,8 @@
 # Toolchain detection for rtframe
 # Priority:
-#   1. ZEPHYR_SDK_INSTALL_DIR (cmake var or env) — preferred, Zephyr-native
-#   2. GNUARMEMB_TOOLCHAIN_PATH (cmake var or env) — generic gnuarmemb
-#   3. Well-known Zephyr SDK locations
+#   1. ZEPHYR_SDK_INSTALL_DIR (cmake var or env)
+#   2. toolchain/zephyr-sdk-* inside repo (installed by tools/setup_env.sh)
+#   3. GNUARMEMB_TOOLCHAIN_PATH (cmake var or env)
 #   4. System PATH arm-none-eabi-gcc
 
 # --- Zephyr SDK path resolution ---
@@ -11,11 +11,9 @@ if(NOT DEFINED ZEPHYR_SDK_INSTALL_DIR AND DEFINED ENV{ZEPHYR_SDK_INSTALL_DIR})
 endif()
 
 if(NOT DEFINED ZEPHYR_SDK_INSTALL_DIR)
-  foreach(_candidate
-      "/home/mx3g/work_space/rtos/zephyr/GCC"
-      "/opt/zephyr-sdk"
-      "$ENV{HOME}/zephyr-sdk"
-  )
+  get_filename_component(_repo_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+  file(GLOB _sdk_candidates "${_repo_root}/toolchain/zephyr-sdk-*")
+  foreach(_candidate ${_sdk_candidates})
     if(EXISTS "${_candidate}/sdk_version")
       set(ZEPHYR_SDK_INSTALL_DIR "${_candidate}")
       break()

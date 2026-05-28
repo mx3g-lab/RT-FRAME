@@ -1,5 +1,6 @@
 build/
 .cache/
+.venv/
 *.elf
 *.bin
 *.hex

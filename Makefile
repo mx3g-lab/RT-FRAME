@@ -5,9 +5,9 @@ NPROC := $(shell nproc)
 
 # Find venv next to ZEPHYR_BASE or in well-known locations
 VENV_CANDIDATES := \
+	$(CURDIR)/.venv/bin/activate \
 	$(ZEPHYR_BASE)/../.venv/bin/activate \
-	$(ZEPHYR_BASE)/.venv/bin/activate \
-	$(CURDIR)/middlewares/.venv/bin/activate
+	$(ZEPHYR_BASE)/.venv/bin/activate
 
 VENV_ACTIVATE := $(firstword $(foreach v,$(VENV_CANDIDATES),$(wildcard $(v))))
 
