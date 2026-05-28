@@ -10,8 +10,18 @@
 
 set -euo pipefail
 
+# Parse args
+CHECK_ONLY=false
+for arg in "$@"; do
+    case "$arg" in
+        --check) CHECK_ONLY=true ;;
+        --*) echo "Unknown option: $arg"; exit 1 ;;
+        *) SDK_VERSION="$arg" ;;
+    esac
+done
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SDK_VERSION="1.0.0"
+SDK_VERSION="${SDK_VERSION:-1.0.0}"
 SDK_DIR="${REPO_ROOT}/toolchain/zephyr-sdk-${SDK_VERSION}"
 VENV_DIR="${REPO_ROOT}/.venv"
 ZEPHYR_SCRIPTS="${REPO_ROOT}/middlewares/zephyr/scripts"
@@ -86,14 +96,58 @@ else
     echo "[VENV] Done."
 fi
 
-# ── Done ──────────────────────────────────────────────────────────────────────
-cat <<EOF
+# ── Verify ────────────────────────────────────────────────────────────────────
+ERRORS=0
+
+# Find the installed SDK (any version under toolchain/)
+INSTALLED_SDK=""
+for d in "${REPO_ROOT}"/toolchain/zephyr-sdk-*/; do
+    [ -f "${d}sdk_version" ] && INSTALLED_SDK="${d}" && break
+done
+
+if [ -n "${INSTALLED_SDK}" ]; then
+    GCC="${INSTALLED_SDK}gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc"
+    if [ -x "${GCC}" ]; then
+        GCC_VER=$("${GCC}" --version 2>&1 | head -1)
+        echo "[OK ] SDK: ${INSTALLED_SDK}"
+        echo "      gcc: ${GCC_VER}"
+    else
+        echo "[ERR] SDK found but arm-zephyr-eabi-gcc not executable: ${GCC}"
+        ERRORS=$((ERRORS+1))
+    fi
+else
+    echo "[ERR] No Zephyr SDK found under ${REPO_ROOT}/toolchain/"
+    ERRORS=$((ERRORS+1))
+fi
+
+if [ -f "${VENV_DIR}/bin/activate" ]; then
+    PYTHON_VER=$(source "${VENV_DIR}/bin/activate" && python3 --version 2>&1)
+    # check a key package used by Zephyr build scripts
+    if "${VENV_DIR}/bin/python3" -c "import elftools" 2>/dev/null; then
+        echo "[OK ] venv: ${VENV_DIR}"
+        echo "      python: ${PYTHON_VER}"
+    else
+        echo "[ERR] venv exists but pyelftools not installed: ${VENV_DIR}"
+        ERRORS=$((ERRORS+1))
+    fi
+else
+    echo "[ERR] venv not found at ${VENV_DIR}"
+    ERRORS=$((ERRORS+1))
+fi
+
+if [ "${ERRORS}" -eq 0 ]; then
+    cat <<EOF
 
 Environment ready.
-  SDK:  ${SDK_DIR}
+  SDK:  ${INSTALLED_SDK:-${SDK_DIR}}
   venv: ${VENV_DIR}
 
 Build:
   make cm7
   make cm4
 EOF
+else
+    echo ""
+    echo "Environment has ${ERRORS} error(s). Run: bash tools/setup_env.sh"
+    exit 1
+fi
