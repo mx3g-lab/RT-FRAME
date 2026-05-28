@@ -1,6 +1,6 @@
 [submodule "middlewares/zephyr"]
 	path = middlewares/zephyr
-	url = https://github.com/zephyrproject-rtos/zephyr
+	url = git@github.com:mx3g-jh/zephyr.git
 [submodule "hardware/hal_nxp"]
 	path = hardware/hal_nxp
 	url = https://github.com/zephyrproject-rtos/hal_nxp
