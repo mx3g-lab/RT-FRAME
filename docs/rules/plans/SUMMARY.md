@@ -12,39 +12,18 @@
 
 ---
 
-## 已完成计划（历史归档，只读）
-
-以下计划存于 `docs/claude/plans/`，内容只读，状态已确认完成：
+## 已完成计划
 
 | 计划文件 | 标题 | 完成日期 |
 | -------- | ---- | -------- |
-| [googletest-integration.md](../../claude/plans/googletest-integration.md) | GoogleTest 集成 | 2026 |
-| [platform-include-refactor.md](../../claude/plans/platform-include-refactor.md) | Platform Include 重构 | 2026 |
-| [kconfig-integration.md](../../claude/plans/kconfig-integration.md) | Kconfig 集成 | 2026 |
-| [driver-bsp-migration.md](../../claude/plans/driver-bsp-migration.md) | Driver-BSP 迁移 | 2026-05-26 |
-| [sitl-and-pthread.md](../../claude/plans/sitl-and-pthread.md) | SITL & pthread | 2026 |
-| [hrt-layered-reorg.md](../../claude/plans/hrt-layered-reorg.md) | HRT 分层重组 | 2026 |
-| [itcm-hot-path.md](../../claude/plans/itcm-hot-path.md) | ITCM Hot Path | 2026 |
-| [flexram-repartition.md](../../claude/plans/flexram-repartition.md) | FlexRAM 重分区 | 2026 |
-| [rename-and-cleanup.md](../../claude/plans/rename-and-cleanup.md) | 重命名与清理 | 2026 |
-| [lock-free-ringbuffer-plan.md](../../claude/plans/lock-free-ringbuffer-plan.md) | 无锁环形缓冲区 | 2026 |
-| [uart-console-merge-lpuart10-plan.md](../../claude/plans/uart-console-merge-lpuart10-plan.md) | UART Console 合并 | 2026 |
-
----
-
-## 进行中待办（对应 plans/ 中活跃计划）
-
-| 待办文件 | 对应计划 | 状态 |
-| -------- | -------- | ---- |
-| [devicetree-uorb-plan](../../claude/todos/devicetree-uorb-plan.md) | devicetree-uorb-plan | 🔄 进行中 |
-| [engineering-quality](../../claude/todos/engineering-quality.md) | engineering-quality | 🔄 进行中 |
+| （暂无） | - | - |
 
 ---
 
 ## 使用说明
 
 ### 新建计划
-1. 在 `docs/rules/plans/` 新建 `<topic>.md`（使用规则2模板）
+1. 在 `docs/rules/plans/` 新建 `<topic>.md`
 2. 在本文"活跃计划"表中登记一行
 3. 执行 commit：`[DOCS] add plan: <topic>`
 

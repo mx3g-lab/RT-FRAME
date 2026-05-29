@@ -1,3 +1,3 @@
-# drivers — hardware abstraction over Zephyr drivers
 # add_subdirectory(imu)
-# add_subdirectory(barometer)
+# add_subdirectory(baro)
+# add_subdirectory(gps)
