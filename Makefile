@@ -29,7 +29,7 @@ JLINK_SPEED ?= 4000
 FLASH_ADDR_CM7 := 0x30000000
 FLASH_ADDR_CM4 := 0x20200000
 
-.PHONY: cm7 cm4 all flash_cm7 flash_cm4 clean help
+.PHONY: cm7 cm4 all flash_cm7 flash_cm4 clean menuconfig_cm7 menuconfig_cm4 guiconfig_cm7 guiconfig_cm4 help
 
 all: cm7 cm4
 
@@ -53,17 +53,41 @@ flash_cm4: ## Flash CM4 firmware via JLink
 	$(JLINK) -device MIMXRT1176xxxA_M4 -if SWD -speed $(JLINK_SPEED) -autoconnect 1 \
 		-CommanderScript /tmp/jlink_cm4.jlink
 
+menuconfig_cm7:
+	@mkdir -p build/cm7
+	$(setup_env) cmake -B build/cm7 -S targets/cm7 -Wno-dev 2>/dev/null || true
+	$(setup_env) cmake --build build/cm7 --target menuconfig
+
+menuconfig_cm4:
+	@mkdir -p build/cm4
+	$(setup_env) cmake -B build/cm4 -S targets/cm4 -Wno-dev 2>/dev/null || true
+	$(setup_env) cmake --build build/cm4 --target menuconfig
+
+guiconfig_cm7:
+	@mkdir -p build/cm7
+	$(setup_env) cmake -B build/cm7 -S targets/cm7 -Wno-dev 2>/dev/null || true
+	$(setup_env) cmake --build build/cm7 --target guiconfig
+
+guiconfig_cm4:
+	@mkdir -p build/cm4
+	$(setup_env) cmake -B build/cm4 -S targets/cm4 -Wno-dev 2>/dev/null || true
+	$(setup_env) cmake --build build/cm4 --target guiconfig
+
 clean:
 	rm -rf build/
 
 help:
 	@echo "Targets:"
-	@echo "  cm7        - Build CM7 firmware"
-	@echo "  cm4        - Build CM4 firmware"
-	@echo "  all        - Build both"
-	@echo "  flash_cm7  - Flash CM7 via JLink"
-	@echo "  flash_cm4  - Flash CM4 via JLink"
-	@echo "  clean      - Remove build/"
+	@echo "  cm7              - Build CM7 firmware"
+	@echo "  cm4              - Build CM4 firmware"
+	@echo "  all              - Build both"
+	@echo "  flash_cm7        - Flash CM7 via JLink"
+	@echo "  flash_cm4        - Flash CM4 via JLink"
+	@echo "  menuconfig_cm7   - Terminal Kconfig UI for CM7"
+	@echo "  menuconfig_cm4   - Terminal Kconfig UI for CM4"
+	@echo "  guiconfig_cm7    - GUI Kconfig UI for CM7"
+	@echo "  guiconfig_cm4    - GUI Kconfig UI for CM4"
+	@echo "  clean            - Remove build/"
 	@echo ""
 	@echo "Variables:"
 	@echo "  ZEPHYR_BASE    (default: middlewares/zephyr)"

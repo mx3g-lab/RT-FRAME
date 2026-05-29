@@ -1,2 +1,2 @@
-source "src/middleware/uorb/Kconfig"
-source "src/middleware/zbus/Kconfig"
+rsource "uorb/Kconfig"
+rsource "zbus/Kconfig"

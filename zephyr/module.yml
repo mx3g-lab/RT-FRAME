@@ -1,4 +1,5 @@
 name: rtframe
 build:
+  kconfig: src/Kconfig
   settings:
     dts_root: .
