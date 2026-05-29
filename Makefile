@@ -1,7 +1,11 @@
 ZEPHYR_BASE    ?= $(CURDIR)/middlewares/zephyr
 ZEPHYR_MODULES ?= $(CURDIR)/hardware/hal_nxp:$(CURDIR)/hardware/cmsis:$(CURDIR)/hardware/cmsis_6
 
-NPROC := $(shell nproc)
+# Cross-platform CPU count
+NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)
+
+# Auto-detect Zephyr SDK inside repo (cross-platform)
+ZEPHYR_SDK_INSTALL_DIR := $(firstword $(wildcard $(CURDIR)/toolchain/zephyr-sdk-*))
 
 # Find venv next to ZEPHYR_BASE or in well-known locations
 VENV_CANDIDATES := \
@@ -13,7 +17,9 @@ VENV_ACTIVATE := $(firstword $(foreach v,$(VENV_CANDIDATES),$(wildcard $(v))))
 
 define setup_env
 	$(if $(VENV_ACTIVATE),. $(VENV_ACTIVATE) &&) \
-	ZEPHYR_BASE=$(ZEPHYR_BASE) ZEPHYR_MODULES=$(ZEPHYR_MODULES)
+	ZEPHYR_BASE=$(ZEPHYR_BASE) \
+	ZEPHYR_MODULES=$(ZEPHYR_MODULES) \
+	$(if $(ZEPHYR_SDK_INSTALL_DIR),ZEPHYR_SDK_INSTALL_DIR=$(ZEPHYR_SDK_INSTALL_DIR))
 endef
 
 JLINK     ?= JLinkExe
