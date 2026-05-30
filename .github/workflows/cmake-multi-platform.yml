@@ -72,14 +72,14 @@ jobs:
         .venv/bin/pip install -r middlewares/zephyr/scripts/requirements.txt
 
     - name: Build ${{ matrix.target }}
-      run: bash build.sh -p ${{ matrix.target_dir }} -j$(nproc) -b
+      run: make ${{ matrix.target }}
 
     - name: Build report
       run: |
-        echo "=== Memory usage ==="
-        size ${{ matrix.build_dir }}/zephyr/zephyr.elf || true
         echo "=== Output files ==="
-        ls -lh ${{ matrix.build_dir }}/zephyr/zephyr.{elf,bin,hex} 2>/dev/null || true
+        find ${{ matrix.build_dir }}/zephyr -maxdepth 1 \
+          -name "zephyr.elf" -o -name "zephyr.bin" -o -name "zephyr.hex" \
+          | xargs ls -lh 2>/dev/null || true
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

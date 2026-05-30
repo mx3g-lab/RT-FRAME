@@ -67,7 +67,7 @@ jobs:
         .venv/bin/pip install -r middlewares/zephyr/scripts/requirements.txt
 
     - name: Build ${{ matrix.target }}
-      run: bash build.sh -p ${{ matrix.target_dir }} -j$(nproc) -b
+      run: make ${{ matrix.target }}
 
     - name: Package artifacts
       run: |
@@ -79,7 +79,7 @@ jobs:
             cp "$src" "dist/rtframe-${{ matrix.target }}-${TAG}.${ext}"
           fi
         done
-        ls -lh dist/
+        ls -lh dist/ || true
 
     - name: Upload build artifact (for release job)
       uses: actions/upload-artifact@v4
