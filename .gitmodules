@@ -10,3 +10,6 @@
 [submodule "hardware/cmsis_6"]
 	path = hardware/cmsis_6
 	url = https://github.com/zephyrproject-rtos/CMSIS_6
+[submodule "hardware/fatfs"]
+	path = hardware/fatfs
+	url = https://github.com/zephyrproject-rtos/fatfs
