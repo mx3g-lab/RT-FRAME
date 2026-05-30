@@ -1,9 +1,13 @@
+menu "uORB"
+
 config RTFRAME_UORB
-    bool "Enable uORB message bus"
-    default n
-    help
-      PX4-style publish/subscribe message bus.
+	bool "uORB message bus"
+	default n
+	help
+	  PX4-style publish/subscribe message bus.
 
 if RTFRAME_UORB
 rsource "uORB/Kconfig"
 endif
+
+endmenu # uORB

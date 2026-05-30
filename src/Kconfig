@@ -1,5 +1,9 @@
+menu "RTFrame"
+
 rsource "core/Kconfig"
 rsource "lib/Kconfig"
 rsource "drivers/Kconfig"
 rsource "modules/Kconfig"
 rsource "middleware/Kconfig"
+
+endmenu # RTFrame

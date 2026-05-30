@@ -1,1 +1,8 @@
-# source "src/drivers/imu/Kconfig"
+menu "Drivers"
+
+# rsource "imu/Kconfig"
+# rsource "baro/Kconfig"
+# rsource "gps/Kconfig"
+rsource "usb/Kconfig"
+
+endmenu # Drivers

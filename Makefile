@@ -1,96 +1,63 @@
-ZEPHYR_BASE    ?= $(CURDIR)/middlewares/zephyr
-ZEPHYR_MODULES ?= $(CURDIR)/hardware/hal_nxp:$(CURDIR)/hardware/cmsis:$(CURDIR)/hardware/cmsis_6
+BUILD := ./build.sh
 
-# Cross-platform CPU count
-NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)
+VMU_CM7 := targets/nxp/vmu_rt1170/cm7
+VMU_CM4 := targets/nxp/vmu_rt1170/cm4
 
-# Auto-detect Zephyr SDK inside repo (cross-platform)
-ZEPHYR_SDK_INSTALL_DIR := $(firstword $(wildcard $(CURDIR)/toolchain/zephyr-sdk-*))
+.PHONY: all cm7 cm4 \
+        flash_cm7 flash_cm4 \
+        menuconfig_cm7 menuconfig_cm4 \
+        guiconfig_cm7 guiconfig_cm4 \
+        sync_cm7 sync_cm4 \
+        clean help
 
-# Find venv next to ZEPHYR_BASE or in well-known locations
-VENV_CANDIDATES := \
-	$(CURDIR)/.venv/bin/activate \
-	$(ZEPHYR_BASE)/../.venv/bin/activate \
-	$(ZEPHYR_BASE)/.venv/bin/activate
-
-VENV_ACTIVATE := $(firstword $(foreach v,$(VENV_CANDIDATES),$(wildcard $(v))))
-
-define setup_env
-	$(if $(VENV_ACTIVATE),. $(VENV_ACTIVATE) &&) \
-	ZEPHYR_BASE=$(ZEPHYR_BASE) \
-	ZEPHYR_MODULES=$(ZEPHYR_MODULES) \
-	$(if $(ZEPHYR_SDK_INSTALL_DIR),ZEPHYR_SDK_INSTALL_DIR=$(ZEPHYR_SDK_INSTALL_DIR))
-endef
-
-JLINK     ?= JLinkExe
-JLINK_SPEED ?= 4000
-
-# JLink flash addresses
-FLASH_ADDR_CM7 := 0x30000000
-FLASH_ADDR_CM4 := 0x20200000
-
-.PHONY: cm7 cm4 all flash_cm7 flash_cm4 clean menuconfig_cm7 menuconfig_cm4 guiconfig_cm7 guiconfig_cm4 help
-
-all: cm7 cm4
+all: cm7
 
 cm7:
-	@rm -rf build/cm7
-	$(setup_env) cmake -B build/cm7 -S targets/cm7
-	$(setup_env) cmake --build build/cm7 -- -j$(NPROC)
+	$(BUILD) -p $(VMU_CM7) -b
 
 cm4:
-	@rm -rf build/cm4
-	$(setup_env) cmake -B build/cm4 -S targets/cm4
-	$(setup_env) cmake --build build/cm4 -- -j$(NPROC)
+	$(BUILD) -p $(VMU_CM4) -b
 
-flash_cm7: ## Flash CM7 firmware via JLink
-	@printf 'r\nloadbin build/cm7/zephyr/zephyr.bin,$(FLASH_ADDR_CM7)\nr\ng\nexit\n' > /tmp/jlink_cm7.jlink
-	$(JLINK) -device MIMXRT1176xxxA_M7 -if SWD -speed $(JLINK_SPEED) -autoconnect 1 \
-		-CommanderScript /tmp/jlink_cm7.jlink
+flash_cm7:
+	$(BUILD) -p $(VMU_CM7) -f
 
-flash_cm4: ## Flash CM4 firmware via JLink
-	@printf 'r\nloadbin build/cm4/zephyr/zephyr.bin,$(FLASH_ADDR_CM4)\nr\ng\nexit\n' > /tmp/jlink_cm4.jlink
-	$(JLINK) -device MIMXRT1176xxxA_M4 -if SWD -speed $(JLINK_SPEED) -autoconnect 1 \
-		-CommanderScript /tmp/jlink_cm4.jlink
+flash_cm4:
+	$(BUILD) -p $(VMU_CM4) -f
 
 menuconfig_cm7:
-	@mkdir -p build/cm7
-	$(setup_env) cmake -B build/cm7 -S targets/cm7 -Wno-dev 2>/dev/null || true
-	$(setup_env) cmake --build build/cm7 --target menuconfig
+	$(BUILD) -p $(VMU_CM7) -k
 
 menuconfig_cm4:
-	@mkdir -p build/cm4
-	$(setup_env) cmake -B build/cm4 -S targets/cm4 -Wno-dev 2>/dev/null || true
-	$(setup_env) cmake --build build/cm4 --target menuconfig
+	$(BUILD) -p $(VMU_CM4) -k
 
 guiconfig_cm7:
-	@mkdir -p build/cm7
-	$(setup_env) cmake -B build/cm7 -S targets/cm7 -Wno-dev 2>/dev/null || true
-	$(setup_env) cmake --build build/cm7 --target guiconfig
+	$(BUILD) -p $(VMU_CM7) -g
 
 guiconfig_cm4:
-	@mkdir -p build/cm4
-	$(setup_env) cmake -B build/cm4 -S targets/cm4 -Wno-dev 2>/dev/null || true
-	$(setup_env) cmake --build build/cm4 --target guiconfig
+	$(BUILD) -p $(VMU_CM4) -g
+
+sync_cm7:
+	$(BUILD) -p $(VMU_CM7) -s
+
+sync_cm4:
+	$(BUILD) -p $(VMU_CM4) -s
 
 clean:
 	rm -rf build/
 
 help:
 	@echo "Targets:"
-	@echo "  cm7              - Build CM7 firmware"
-	@echo "  cm4              - Build CM4 firmware"
-	@echo "  all              - Build both"
+	@echo "  all              - Build CM7 (default)"
+	@echo "  cm7              - Build CM7"
+	@echo "  cm4              - Build CM4"
 	@echo "  flash_cm7        - Flash CM7 via JLink"
 	@echo "  flash_cm4        - Flash CM4 via JLink"
 	@echo "  menuconfig_cm7   - Terminal Kconfig UI for CM7"
 	@echo "  menuconfig_cm4   - Terminal Kconfig UI for CM4"
 	@echo "  guiconfig_cm7    - GUI Kconfig UI for CM7"
 	@echo "  guiconfig_cm4    - GUI Kconfig UI for CM4"
+	@echo "  sync_cm7         - Sync .config -> CM7 defconfig"
+	@echo "  sync_cm4         - Sync .config -> CM4 defconfig"
 	@echo "  clean            - Remove build/"
 	@echo ""
-	@echo "Variables:"
-	@echo "  ZEPHYR_BASE    (default: middlewares/zephyr)"
-	@echo "  ZEPHYR_MODULES (default: hardware/hal_nxp:...)"
-	@echo "  JLINK          (default: JLinkExe)"
-	@echo "  JLINK_SPEED    (default: 4000 kHz)"
+	@echo "For advanced usage: ./build.sh -h"

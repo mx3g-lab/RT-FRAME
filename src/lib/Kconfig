@@ -1,1 +1,5 @@
-# source "src/lib/matrix/Kconfig"
+menu "Libraries"
+
+# rsource "matrix/Kconfig"
+
+endmenu # Libraries

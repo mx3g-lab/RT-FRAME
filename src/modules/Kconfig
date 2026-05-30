@@ -1,1 +1,5 @@
-# source "src/modules/attitude_control/Kconfig"
+menu "Modules"
+
+# rsource "attitude_control/Kconfig"
+
+endmenu # Modules

@@ -1,2 +1,6 @@
+menu "Middleware"
+
 rsource "uorb/Kconfig"
 rsource "zbus/Kconfig"
+
+endmenu # Middleware

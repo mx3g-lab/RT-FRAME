@@ -1,0 +1,35 @@
+menu "USB"
+
+config RTFRAME_USB_CDC
+	bool "USB CDC-ACM virtual serial port"
+	depends on USB_DEVICE_STACK_NEXT && USBD_CDC_ACM_CLASS
+	default n
+	help
+	  Initialize a USB CDC-ACM virtual serial port at boot.
+
+if RTFRAME_USB_CDC
+
+config RTFRAME_USB_CDC_VID
+	hex "USB Vendor ID"
+	default 0x2fe3
+
+config RTFRAME_USB_CDC_PID
+	hex "USB Product ID"
+	default 0x0001
+
+config RTFRAME_USB_CDC_MANUFACTURER
+	string "USB manufacturer string"
+	default "RTFrame"
+
+config RTFRAME_USB_CDC_PRODUCT
+	string "USB product string"
+	default "RTFrame CM7"
+
+config RTFRAME_USB_CDC_MAX_POWER
+	int "Max power (in 2mA units)"
+	default 125
+	range 0 250
+
+endif # RTFRAME_USB_CDC
+
+endmenu # USB

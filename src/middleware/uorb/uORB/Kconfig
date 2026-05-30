@@ -1,15 +1,7 @@
-menuconfig ORB_COMMUNICATOR
-	bool "orb communicator"
-	default n
-	depends on PLATFORM_QURT || PLATFORM_POSIX
-	---help---
-		Enable support for the uorb communicator for distributed platforms
-
 config UORB_SUBSCRIBE_HANDLE_MAX
-	int "Maximum number of concurrent orb_subscribe handles"
+	int "Maximum concurrent orb_subscribe handles"
 	default 64
 	range 8 256
-	---help---
-		Maximum number of simultaneous fd-style subscriptions (orb_subscribe).
-		Each slot uses sizeof(Subscription) bytes on the heap.
-		Increase if you see orb_subscribe returning -1.
+	help
+	  Maximum number of simultaneous fd-style subscriptions (orb_subscribe).
+	  Each slot uses sizeof(Subscription) bytes on the heap.

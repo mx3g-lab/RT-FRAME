@@ -528,6 +528,18 @@
 
 zephyr_udc0: &usb1 {
 	status = "okay";
+	phy-handle = <&usbphy1>;
+
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&usbphy1 {
+	status = "okay";
+	tx-d-cal = <7>;
+	tx-cal-45-dp-ohms = <6>;
+	tx-cal-45-dm-ohms = <6>;
 };
 
 /* FlexRAM: 12 banks ITCM (384KB) + 4 banks DTCM (128KB)

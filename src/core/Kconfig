@@ -1,1 +1,5 @@
-# source "src/core/params/Kconfig"
+menu "Core"
+
+# rsource "params/Kconfig"
+
+endmenu # Core
