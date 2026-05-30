@@ -235,6 +235,9 @@ else
     pip install --upgrade pip
     echo "[VENV] Installing Zephyr Python requirements..."
     pip install -r "${ZEPHYR_SCRIPTS}/requirements.txt"
+    echo "[VENV] Installing uORB message generator deps (empy/genmsg)..."
+    # empy must be 3.3.x — empy 4.x changed em.Interpreter API, breaks PX4 generator
+    pip install "empy==3.3.4" pyros-genmsg
     echo "[VENV] Done."
 fi
 
