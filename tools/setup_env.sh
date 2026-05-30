@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # Bootstrap the rtframe build environment on a new machine.
-# Run once from the repo root: bash tools/setup_env.sh [--check] [SDK_VERSION]
+# Run once from the repo root: bash tools/setup_env.sh
 #
 # What it does:
 #   0. Initialize git submodules if not already done
-#   1. Download Zephyr SDK minimal skeleton for current platform
-#   2. Download toolchains listed in tools/toolchains.conf
-#   3. Download hosttools
-#   4. Create Python venv at <repo>/.venv
-#   5. Install Zephyr Python requirements into the venv
+#   1. Download Zephyr SDK (arm-zephyr-eabi + hosttools) for current platform
+#   2. Install the SDK to <repo>/toolchain/zephyr-sdk-<version>
+#   3. Create Python venv at <repo>/.venv
+#   4. Install Zephyr Python requirements into the venv
 
 set -euo pipefail
 
@@ -27,7 +26,6 @@ SDK_VERSION="${SDK_VERSION:-1.0.0}"
 SDK_DIR="${REPO_ROOT}/toolchain/zephyr-sdk-${SDK_VERSION}"
 VENV_DIR="${REPO_ROOT}/.venv"
 ZEPHYR_SCRIPTS="${REPO_ROOT}/middlewares/zephyr/scripts"
-TOOLCHAINS_CONF="${REPO_ROOT}/tools/toolchains.conf"
 SDK_BASE_URL="https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${SDK_VERSION}"
 
 # ── Detect platform ───────────────────────────────────────────────────────────
@@ -53,19 +51,10 @@ case "${OS}" in
 esac
 
 SDK_MINIMAL_TAR="zephyr-sdk-${SDK_VERSION}_${PLATFORM}_minimal.tar.xz"
+ARM_TOOLCHAIN_TAR="toolchain_gnu_${PLATFORM}_arm-zephyr-eabi.tar.xz"
 HOSTTOOLS_TAR="hosttools_${PLATFORM}.tar.xz"
 
 echo "[ENV] Platform: ${OS} ${ARCH} (${PLATFORM})"
-
-# ── Read toolchains.conf ──────────────────────────────────────────────────────
-read_toolchains() {
-    if [ ! -f "${TOOLCHAINS_CONF}" ]; then
-        echo "ERROR: ${TOOLCHAINS_CONF} not found."
-        exit 1
-    fi
-    # strip comments and blank lines
-    grep -v '^\s*#' "${TOOLCHAINS_CONF}" | grep -v '^\s*$' || true
-}
 
 # ── Check tools ───────────────────────────────────────────────────────────────
 need() {
@@ -91,8 +80,8 @@ else
 fi
 echo "[ENV] Using ${PYTHON3} ($(${PYTHON3} --version))"
 
-# ── Check mode ────────────────────────────────────────────────────────────────
 if [ "${CHECK_ONLY}" = true ]; then
+    # ── Check mode ────────────────────────────────────────────────────────────
     ERRORS=0
 
     # submodules
@@ -100,7 +89,7 @@ if [ "${CHECK_ONLY}" = true ]; then
        [ -f "${REPO_ROOT}/hardware/hal_nxp/zephyr/module.yml" ]; then
         echo "[OK ] submodules initialized"
     else
-        echo "[ERR] submodules not initialized"
+        echo "[ERR] submodules not initialized — run: git submodule update --init --recursive"
         ERRORS=$((ERRORS+1))
     fi
 
@@ -110,19 +99,15 @@ if [ "${CHECK_ONLY}" = true ]; then
         [ -f "${d}sdk_version" ] && INSTALLED_SDK="${d}" && break
     done
     if [ -n "${INSTALLED_SDK}" ]; then
-        echo "[OK ] SDK: ${INSTALLED_SDK}"
-        # check each toolchain in conf
-        while IFS= read -r tc; do
-            GCC="${INSTALLED_SDK}gnu/${tc}/bin/${tc}-gcc"
-            if [ -x "${GCC}" ]; then
-                GCC_VER=$("${GCC}" --version 2>&1 | head -1)
-                echo "[OK ]   toolchain: ${tc}"
-                echo "          gcc: ${GCC_VER}"
-            else
-                echo "[ERR]   toolchain not found: ${tc}"
-                ERRORS=$((ERRORS+1))
-            fi
-        done < <(read_toolchains)
+        GCC="${INSTALLED_SDK}gnu/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc"
+        if [ -x "${GCC}" ]; then
+            GCC_VER=$("${GCC}" --version 2>&1 | head -1)
+            echo "[OK ] SDK: ${INSTALLED_SDK}"
+            echo "      gcc: ${GCC_VER}"
+        else
+            echo "[ERR] SDK found but arm-zephyr-eabi-gcc not executable: ${GCC}"
+            ERRORS=$((ERRORS+1))
+        fi
     else
         echo "[ERR] No Zephyr SDK found under ${REPO_ROOT}/toolchain/"
         ERRORS=$((ERRORS+1))
@@ -164,11 +149,11 @@ else
     echo "[GIT] Submodules already initialized."
 fi
 
-# ── Step 1: Zephyr SDK skeleton ───────────────────────────────────────────────
+# ── Step 1: Zephyr SDK ────────────────────────────────────────────────────────
 if [ -f "${SDK_DIR}/sdk_version" ]; then
-    echo "[SDK] already installed at ${SDK_DIR}, skipping skeleton download."
+    echo "[SDK] already installed at ${SDK_DIR}, skipping download."
 else
-    echo "[SDK] Downloading Zephyr SDK ${SDK_VERSION} skeleton for ${PLATFORM}..."
+    echo "[SDK] Downloading Zephyr SDK ${SDK_VERSION} for ${PLATFORM}..."
     TMP_DIR="$(mktemp -d)"
     trap 'rm -rf "$TMP_DIR"' EXIT
 
@@ -176,46 +161,20 @@ else
     echo "[SDK] Extracting SDK skeleton..."
     mkdir -p "${REPO_ROOT}/toolchain"
     tar -xJf "${TMP_DIR}/${SDK_MINIMAL_TAR}" -C "${REPO_ROOT}/toolchain"
-    echo "[SDK] Skeleton done: ${SDK_DIR}"
-fi
 
-# ── Step 2: Toolchains ────────────────────────────────────────────────────────
-mkdir -p "${SDK_DIR}/gnu"
+    curl -fL "${SDK_BASE_URL}/${ARM_TOOLCHAIN_TAR}" -o "${TMP_DIR}/${ARM_TOOLCHAIN_TAR}"
+    echo "[SDK] Extracting arm-zephyr-eabi..."
+    tar -xJf "${TMP_DIR}/${ARM_TOOLCHAIN_TAR}" -C "${SDK_DIR}"
+    mkdir -p "${SDK_DIR}/gnu"
+    for d in "${SDK_DIR}"/*-zephyr-*; do
+        [ -d "$d" ] && mv "$d" "${SDK_DIR}/gnu/"
+    done
 
-while IFS= read -r tc; do
-    TC_DIR="${SDK_DIR}/gnu/${tc}"
-    if [ -d "${TC_DIR}" ]; then
-        echo "[TC ] already installed: ${tc}"
-        continue
-    fi
-
-    TC_TAR="toolchain_gnu_${PLATFORM}_${tc}.tar.xz"
-    echo "[TC ] Downloading toolchain: ${tc}..."
-    TMP_DIR="$(mktemp -d)"
-    trap 'rm -rf "$TMP_DIR"' EXIT
-
-    curl -fL "${SDK_BASE_URL}/${TC_TAR}" -o "${TMP_DIR}/${TC_TAR}"
-    echo "[TC ] Extracting ${tc}..."
-    tar -xJf "${TMP_DIR}/${TC_TAR}" -C "${SDK_DIR}"
-    # move to gnu/ if extracted to root
-    if [ -d "${SDK_DIR}/${tc}" ]; then
-        mv "${SDK_DIR}/${tc}" "${SDK_DIR}/gnu/"
-    fi
-    echo "[TC ] Done: ${tc}"
-done < <(read_toolchains)
-
-# ── Step 3: Hosttools ─────────────────────────────────────────────────────────
-if [ -f "${SDK_DIR}/hosttools/zephyr-sdk-x86_64-hosttools-standalone-0.10.sh" ] || \
-   [ -d "${SDK_DIR}/hosttools/sysroots" ]; then
-    echo "[HT ] hosttools already installed."
-else
-    echo "[HT ] Downloading hosttools for ${PLATFORM}..."
-    TMP_DIR="$(mktemp -d)"
-    trap 'rm -rf "$TMP_DIR"' EXIT
     curl -fL "${SDK_BASE_URL}/${HOSTTOOLS_TAR}" -o "${TMP_DIR}/${HOSTTOOLS_TAR}"
-    echo "[HT ] Extracting hosttools..."
+    echo "[SDK] Extracting hosttools..."
     tar -xJf "${TMP_DIR}/${HOSTTOOLS_TAR}" -C "${SDK_DIR}"
-    echo "[HT ] Done."
+
+    echo "[SDK] Done: ${SDK_DIR}"
 fi
 
 # ── Step 4: Python venv ───────────────────────────────────────────────────────
