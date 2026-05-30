@@ -162,10 +162,10 @@ done
 load_target
 
 # ── 按逻辑顺序执行 ────────────────────────────────────────────────────────────
-[ $DO_CLEAN      -eq 1 ] && do_clean
-[ $DO_CONFIGURE  -eq 1 ] && do_configure
-[ $DO_BUILD      -eq 1 ] && do_build
-[ $DO_MENUCONFIG -eq 1 ] && do_menuconfig
-[ $DO_GUICONFIG  -eq 1 ] && do_guiconfig
-[ $DO_FLASH      -eq 1 ] && do_flash
-[ $DO_SYNC       -eq 1 ] && do_sync
+[ $DO_CLEAN      -eq 1 ] && do_clean      || true
+[ $DO_CONFIGURE  -eq 1 ] && do_configure  || true
+[ $DO_BUILD      -eq 1 ] && do_build      || true
+[ $DO_MENUCONFIG -eq 1 ] && do_menuconfig || true
+[ $DO_GUICONFIG  -eq 1 ] && do_guiconfig  || true
+[ $DO_FLASH      -eq 1 ] && do_flash      || true
+[ $DO_SYNC       -eq 1 ] && do_sync       || true
