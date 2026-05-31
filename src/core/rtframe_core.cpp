@@ -1,8 +1,10 @@
 #include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
 #include <zephyr/shell/shell.h>
+#include <zephyr/logging/log.h>
 #include "rtframe_core.h"
 #include "task_register.h"
+
+LOG_MODULE_REGISTER(rtframe_core, LOG_LEVEL_INF);
 
 STRUCT_SECTION_START_EXTERN(task_entry);
 STRUCT_SECTION_END_EXTERN(task_entry);
@@ -19,14 +21,17 @@ static const char *model_str(vwork::Model m)
 /* 汇总打印所有已注册任务（启动时 + 可被 shell 复用）。 */
 void task_list_print()
 {
-	printk("\n%-18s %-9s %-16s %8s %4s %5s %3s\n",
-	       "TASK", "MODEL", "CONFIG", "PERIOD", "PRIO", "STACK", "LVL");
+	LOG_INF("");
+	LOG_INF("================================Task List================================");
+	LOG_INF("%-18s %-9s %-16s %8s %4s %5s %3s",
+	        "TASK", "MODEL", "CONFIG", "PERIOD", "PRIO", "STACK", "LVL");
 	STRUCT_SECTION_FOREACH(task_entry, e) {
-		printk("%-18s %-9s %-16s %8u %4d %5u %3u\n",
-		       e->name, model_str(e->model), e->cfg_name,
-		       e->period_us, e->priority, e->stacksize, e->init_level);
+		LOG_INF("%-18s %-9s %-16s %8u %4d %5u %3u",
+		        e->name, model_str(e->model), e->cfg_name,
+		        e->period_us, e->priority, e->stacksize, e->init_level);
 	}
-	printk("\n");
+	LOG_INF("=========================================================================");
+	LOG_INF("");
 }
 
 void task_init()
@@ -37,7 +42,7 @@ void task_init()
 			if (e->init_level == level) {
 				bool ok = e->start_fn();
 				if (!ok) {
-					printk("[core] start FAIL: %s\n", e->name);
+					LOG_ERR("start FAIL: %s", e->name);
 				}
 			}
 		}
@@ -46,10 +51,10 @@ void task_init()
 
 void rtframe_core_init()
 {
-	printk("[core] rtframe init\n");
+	LOG_INF("rtframe init");
 	task_list_print();
 	task_init();
-	printk("[core] tasks started\n");
+	LOG_INF("tasks started");
 }
 
 /* ---------- shell: rtframe task ---------- */

@@ -1,5 +1,6 @@
 menu "Libraries"
 
 # rsource "matrix/Kconfig"
+rsource "parameters/Kconfig"
 
 endmenu # Libraries

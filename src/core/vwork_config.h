@@ -72,7 +72,8 @@ struct config_t {
 	X(heartbeat, "vwork:heartbeat", 2048, PRIORITY_CRITICAL,  Model::THREAD)    \
 	X(sensor,    "vwork:sensor",    3072, PRIORITY_DEFAULT,   Model::WORKQUEUE) \
 	X(sub,       "vwork:sub",       1536, PRIORITY_DEFAULT,   Model::THREAD)	\
-	X(pub,		 "vwork:pub",       4096, PRIORITY_DEFAULT,   Model::THREAD)
+	X(pub,		 "vwork:pub",       4096, PRIORITY_DEFAULT,   Model::THREAD)    \
+	X(param_save,"vwork:param_save",4096, PRIORITY_FS,        Model::WORKQUEUE)
 
 namespace configs
 {

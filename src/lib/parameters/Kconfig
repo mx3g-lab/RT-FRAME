@@ -1,0 +1,23 @@
+menuconfig RTFRAME_PARAM
+	bool "Parameter system"
+	default n
+	help
+	  Enable the PX4-compatible parameter system with BSON file storage.
+
+if RTFRAME_PARAM
+
+config PARAM_PRIMARY
+	bool "Parameter primary node"
+	default n
+	help
+	  Enable support for the parameter primary in distributed board
+	  architectures (e.g. CM7 as primary, CM4 as remote).
+
+config PARAM_REMOTE
+	bool "Parameter remote node"
+	default n
+	help
+	  Enable support for the parameter remote in distributed board
+	  architectures (e.g. CM4 as remote, CM7 as primary).
+
+endif # RTFRAME_PARAM
