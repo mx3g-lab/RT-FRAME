@@ -16,3 +16,6 @@
 [submodule "src/modules/mavlink/mavlink"]
 	path = src/modules/mavlink/mavlink
 	url = https://github.com/mx3g-jh/mavlink.git
+[submodule "src/lib/heatshrink/heatshrink"]
+	path = src/lib/heatshrink/heatshrink
+	url = https://github.com/mx3g-jh/heatshrink.git
