@@ -144,7 +144,8 @@ MessageFormatReader::State MessageFormatReader::readMore()
 		// Decompress more data
 		size_t count = 0;
 
-		if (heatshrink_decoder_sink(&_hsd, &compressed_formats[_compressed_formats_idx],
+		if (heatshrink_decoder_sink(&_hsd,
+					    const_cast<uint8_t *>(&compressed_formats[_compressed_formats_idx]),
 					    compressed_formats_size - _compressed_formats_idx, &count) < 0) {
 			_state = State::Failure;
 			return _state;

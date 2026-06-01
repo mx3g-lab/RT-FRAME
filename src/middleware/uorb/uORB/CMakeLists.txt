@@ -79,7 +79,7 @@ if (NOT DEFINED CONFIG_BUILD_FLAT AND "${PX4_PLATFORM}" MATCHES "nuttx")
 		${SRCS_COMMON}
 		${SRCS_KERNEL}
 		)
-	target_link_libraries(uORB_kernel PRIVATE cdev uorb_msgs nuttx_mm heatshrink)
+	target_link_libraries(uORB_kernel PRIVATE cdev uorb_msgs nuttx_mm rtframe_heatshrink)
 	target_compile_options(uORB_kernel PRIVATE ${MAX_CUSTOM_OPT_LEVEL} -D__KERNEL__)
 
 	# User side library in nuttx kernel/protected build
@@ -94,7 +94,7 @@ elseif("${PX4_PLATFORM}" MATCHES "nuttx")
 		${SRCS_COMMON}
 		${SRCS_KERNEL}
 		)
-	target_link_libraries(uORB PRIVATE cdev nuttx_mm)
+	target_link_libraries(uORB PRIVATE cdev nuttx_mm rtframe_heatshrink)
 else()
 
 	# Library for all other targets (posix...)
@@ -105,7 +105,7 @@ else()
 	target_link_libraries(uORB PRIVATE cdev)
 endif()
 
-target_link_libraries(uORB PRIVATE uorb_msgs heatshrink)
+target_link_libraries(uORB PRIVATE uorb_msgs rtframe_heatshrink)
 target_compile_options(uORB PRIVATE ${MAX_CUSTOM_OPT_LEVEL})
 
 if(PX4_TESTING)

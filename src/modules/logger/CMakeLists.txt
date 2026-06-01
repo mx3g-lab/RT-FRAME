@@ -23,7 +23,7 @@ if(CONFIG_RTFRAME_LOGGER)
 
     zephyr_library_compile_options(-Wno-cast-align -Wno-sign-compare)
 
-    zephyr_library_link_libraries(rtframe_core rtframe_hrt rtframe_perf rtframe_parameters)
+    zephyr_library_link_libraries(rtframe_core rtframe_hrt rtframe_perf rtframe_parameters rtframe_uorb rtframe_heatshrink)
 
     if(CONFIG_RTFRAME_MAVLINK_LOG)
         zephyr_library_link_libraries(rtframe_mavlink_log)

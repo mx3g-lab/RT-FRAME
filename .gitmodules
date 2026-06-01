@@ -18,4 +18,4 @@
 	url = https://github.com/mx3g-jh/mavlink.git
 [submodule "src/lib/heatshrink/heatshrink"]
 	path = src/lib/heatshrink/heatshrink
-	url = https://github.com/mx3g-jh/heatshrink.git
+	url = https://github.com/mx3g-lab/heatshrink_px4.git
