@@ -1,0 +1,5 @@
+config RTFRAME_CONSOLE_BUFFER
+	bool "Console ring-buffer"
+	default n
+	help
+	  Enable console output ring-buffer for deferred log retrieval.

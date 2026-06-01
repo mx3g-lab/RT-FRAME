@@ -1,0 +1,7 @@
+menuconfig RTFRAME_TEST_SDCARD
+	bool "SD card test module"
+	default n
+	depends on POSIX_API && FILE_SYSTEM && FAT_FILESYSTEM_ELM
+	help
+	  Enable the SD card read/write test module.
+	  Requires POSIX file I/O and FAT filesystem support.

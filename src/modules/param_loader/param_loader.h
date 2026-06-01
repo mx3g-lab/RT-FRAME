@@ -2,12 +2,11 @@
 
 #include <vwork.h>
 
-class ParamLoader : public vwork::Periodic
+class ParamLoader : public vwork::Thread
 {
 public:
-	ParamLoader() : vwork::Periodic(vwork::configs::param_save) {}
+	ParamLoader() : vwork::Thread(vwork::configs::param_auto_start) {}
 
 private:
-	void init() override;
-	void callback() override {}
+	void run() override;
 };

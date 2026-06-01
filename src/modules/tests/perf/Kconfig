@@ -1,0 +1,6 @@
+menuconfig RTFRAME_TEST_PERF
+	bool "Performance counter test"
+	default n
+	depends on SHELL
+	help
+	  Enable the performance counter test module.

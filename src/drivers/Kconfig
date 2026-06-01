@@ -1,8 +1,11 @@
 menu "Drivers"
 
-# rsource "imu/Kconfig"
-# rsource "baro/Kconfig"
-# rsource "gps/Kconfig"
+config RTFRAME_DRIVERS
+    bool "Enable RTFrame drivers"
+    default y
+    help
+      Master switch for all RTFrame drivers (USB CDC-ACM).
+
 rsource "usb/Kconfig"
 
 endmenu # Drivers

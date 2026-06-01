@@ -11,4 +11,4 @@ CONFIG_GPIO=y
 # CM4 core; keep minimal for hello_world.
 
 # Added by sync_defconfig
-CONFIG_UORB_SUBSCRIBE_HANDLE_MAX=64
+# CONFIG_UORB_SUBSCRIBE_HANDLE_MAX is not set

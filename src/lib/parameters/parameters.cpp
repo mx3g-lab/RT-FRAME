@@ -860,13 +860,6 @@ int param_save_default(bool blocking)
 				res = param_export_internal(fd, nullptr);
 				perf_end(param_export_perf);
 				::close(fd);
-
-				if (res == PX4_OK) {
-					// reopen file to verify
-					int fd_verify = ::open(filename, O_RDONLY, PX4_O_MODE_666);
-					res = param_verify(fd_verify) || lseek(fd_verify, 0, SEEK_SET) || param_verify(fd_verify);
-					::close(fd_verify);
-				}
 			}
 
 			if (res == PX4_OK) {

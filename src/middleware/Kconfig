@@ -1,5 +1,11 @@
 menu "Middleware"
 
+config RTFRAME_MIDDLEWARE
+    bool "Enable RTFrame middleware"
+    default y
+    help
+      Master switch for all RTFrame middleware (uORB, zbus).
+
 rsource "uorb/Kconfig"
 rsource "zbus/Kconfig"
 

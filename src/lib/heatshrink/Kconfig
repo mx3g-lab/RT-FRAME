@@ -1,0 +1,5 @@
+config RTFRAME_HEATSHRINK
+	bool "Heatshrink compression library"
+	default y
+	help
+	  Enable the Heatshrink LZSS compression/decompression library.

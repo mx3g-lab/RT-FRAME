@@ -43,7 +43,7 @@
 #include <float.h>
 #include <math.h>
 
-#include <parameters/px4_parameters.hpp>
+#include <px4_parameters.hpp>
 
 /**
  * get the parameter handle from a parameter enum

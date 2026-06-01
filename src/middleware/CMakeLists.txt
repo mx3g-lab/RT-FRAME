@@ -1,2 +1,2 @@
-add_subdirectory(uorb)
-add_subdirectory(zbus)
+add_subdirectory_ifdef(CONFIG_RTFRAME_UORB  uorb)
+add_subdirectory_ifdef(CONFIG_RTFRAME_ZBUS  zbus)

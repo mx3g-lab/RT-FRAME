@@ -1,0 +1,9 @@
+
+menuconfig RTFRAME_SD_BENCH
+	bool "SD card benchmark shell command"
+	default n
+	depends on SHELL && FILE_SYSTEM && FAT_FILESYSTEM_ELM
+	help
+	  Enable the 'sd_bench' shell command for measuring SD card
+	  read/write throughput and worst-case block latency.
+	  Uses POSIX file I/O (open/write/read/close/fsync/unlink).

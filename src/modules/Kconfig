@@ -1,5 +1,14 @@
 menu "Modules"
 
-# rsource "attitude_control/Kconfig"
+config RTFRAME_MODULES
+    bool "Enable RTFrame modules"
+    default y
+    help
+      Master switch for all RTFrame application modules (logger,
+      param_loader, tests).
+
+rsource "logger/Kconfig"
+rsource "param_loader/Kconfig"
+rsource "tests/Kconfig"
 
 endmenu # Modules

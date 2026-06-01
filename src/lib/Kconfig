@@ -1,6 +1,26 @@
 menu "Libraries"
 
-# rsource "matrix/Kconfig"
+config RTFRAME_LIB
+    bool "Enable optional RTFrame libraries"
+    default y
+    help
+      Master switch for optional RTFrame libraries (log, perf, ringbuffer,
+      crc, heatshrink, mathlib, matrix, mavlink_log, console_buffer,
+      parameters, sd_bench, tinybson). The hrt library is always compiled
+      as it is required by the core runtime.
+
+rsource "hrt/Kconfig"
+rsource "log/Kconfig"
+rsource "perf/Kconfig"
+rsource "ringbuffer/Kconfig"
+rsource "crc/Kconfig"
+rsource "heatshrink/Kconfig"
+rsource "mathlib/Kconfig"
+rsource "matrix/Kconfig"
+rsource "mavlink_log/Kconfig"
+rsource "console_buffer/Kconfig"
 rsource "parameters/Kconfig"
+rsource "sd_bench/Kconfig"
+rsource "tinybson/Kconfig"
 
 endmenu # Libraries

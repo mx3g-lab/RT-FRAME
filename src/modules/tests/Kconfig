@@ -1,0 +1,17 @@
+menu "Tests"
+
+config RTFRAME_TESTS
+    bool "Enable RTFrame test modules"
+    default n
+    help
+      Master switch for all RTFrame test modules (sdcard, perf,
+      ringbuffer, param, demo_pub, demo_sub).
+
+rsource "sdcard/Kconfig"
+rsource "perf/Kconfig"
+rsource "ringbuffer/Kconfig"
+rsource "param/Kconfig"
+rsource "demo_pub/Kconfig"
+rsource "demo_sub/Kconfig"
+
+endmenu # Tests

@@ -1,0 +1,5 @@
+config RTFRAME_PERF
+	bool "Performance counter library"
+	default y
+	help
+	  Enable lightweight performance counters for timing and event counting.

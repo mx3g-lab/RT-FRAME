@@ -1,0 +1,5 @@
+config RTFRAME_MATHLIB
+	bool "Math utility library"
+	default y
+	help
+	  Enable math helper utilities (limits, filters, etc.).

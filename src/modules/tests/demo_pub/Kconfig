@@ -1,0 +1,6 @@
+menuconfig RTFRAME_DEMO_PUB
+	bool "uORB demo publisher"
+	default n
+	depends on RTFRAME_UORB
+	help
+	  Enable the uORB demo publisher module.

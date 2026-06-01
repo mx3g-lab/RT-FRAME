@@ -1,0 +1,7 @@
+menuconfig RTFRAME_PARAM_LOADER
+	bool "Parameter loader module"
+	default n
+	depends on RTFRAME_PARAM && FILE_SYSTEM && POSIX_API
+	help
+	  Enable the parameter loader module which reads/writes parameters
+	  from the SD card at startup. Requires FILE_SYSTEM and POSIX_API.

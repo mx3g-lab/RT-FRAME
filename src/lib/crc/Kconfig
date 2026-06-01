@@ -1,0 +1,5 @@
+config RTFRAME_CRC
+	bool "CRC library"
+	default y
+	help
+	  Enable CRC-8 / CRC-16 / CRC-32 computation utilities.

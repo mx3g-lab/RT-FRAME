@@ -1,0 +1,5 @@
+config RTFRAME_RINGBUFFER
+	bool "Ring buffer library"
+	default y
+	help
+	  Enable the lock-free ring buffer implementation.

@@ -22,7 +22,7 @@ using namespace time_literals;
 ParamAutosave::ParamAutosave()
 {
 	k_work_init_delayable(&_dwork, work_handler);
-	_wq = vwork::work_queue_find_or_create(vwork::configs::param_save);
+	_wq = vwork::work_queue_find_or_create(vwork::configs::param_autosave);
 }
 
 ParamAutosave::~ParamAutosave()

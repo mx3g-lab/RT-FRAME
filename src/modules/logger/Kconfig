@@ -1,0 +1,7 @@
+config RTFRAME_LOGGER
+	bool "ULog logger"
+	default n
+	depends on RTFRAME_PARAM
+	help
+	  Enable the ULog data logger. Writes binary ULog files to SD card
+	  (/SD:/log/). Requires the parameter system and file system.

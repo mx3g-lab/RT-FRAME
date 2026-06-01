@@ -1,3 +1,5 @@
-zephyr_library_named(rtframe_tinybson)
-zephyr_library_sources(tinybson.cpp)
-zephyr_library_compile_options(-Wno-sign-compare)
+if(CONFIG_RTFRAME_TINYBSON)
+    zephyr_library_named(rtframe_tinybson)
+    zephyr_library_sources_ifdef(CONFIG_RTFRAME_TINYBSON tinybson.cpp)
+    zephyr_library_compile_options(-Wno-sign-compare)
+endif()

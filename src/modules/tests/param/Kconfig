@@ -1,0 +1,6 @@
+menuconfig RTFRAME_TEST_PARAM
+	bool "Parameter system test"
+	default n
+	depends on RTFRAME_PARAM && SHELL
+	help
+	  Enable the parameter system test module.

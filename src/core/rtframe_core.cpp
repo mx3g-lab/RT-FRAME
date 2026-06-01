@@ -3,6 +3,10 @@
 #include <zephyr/logging/log.h>
 #include "rtframe_core.h"
 #include "task_register.h"
+#include "sd_sync.h"
+
+/* 全局信号量：param_loader 完成初始化后 give，logger 等等 SD 依赖模块 take */
+K_SEM_DEFINE(g_sd_ready_sem, 0, 1);
 
 LOG_MODULE_REGISTER(rtframe_core, LOG_LEVEL_INF);
 

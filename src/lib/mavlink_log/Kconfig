@@ -1,0 +1,6 @@
+config RTFRAME_MAVLINK_LOG
+	bool "MAVLink log publisher"
+	default n
+	depends on RTFRAME_UORB
+	help
+	  Enable MAVLink log message publishing over uORB.

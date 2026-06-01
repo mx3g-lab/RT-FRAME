@@ -1,0 +1,5 @@
+config RTFRAME_HRT
+	bool "High-resolution timer (HRT)"
+	default y
+	help
+	  Enable the high-resolution timer library used by the rtframe core.

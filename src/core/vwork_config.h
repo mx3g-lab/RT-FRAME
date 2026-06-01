@@ -73,7 +73,10 @@ struct config_t {
 	X(sensor,    "vwork:sensor",    3072, PRIORITY_DEFAULT,   Model::WORKQUEUE) \
 	X(sub,       "vwork:sub",       1536, PRIORITY_DEFAULT,   Model::THREAD)	\
 	X(pub,		 "vwork:pub",       4096, PRIORITY_DEFAULT,   Model::THREAD)    \
-	X(param_save,"vwork:param_save",4096, PRIORITY_FS,        Model::WORKQUEUE)
+	X(param_auto_start, "vwork:param_auto_start", 8192, PRIORITY_FS,      Model::THREAD)    \
+	X(param_autosave, "vwork:param_autosave",  8192, PRIORITY_FS,      Model::WORKQUEUE) \
+	X(logger,         "vwork:logger",       8192, PRIORITY_DEFAULT, Model::THREAD)    \
+	X(log_writer,     "vwork:log_writer",   4096, PRIORITY_FS,      Model::THREAD)
 
 namespace configs
 {

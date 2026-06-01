@@ -1,0 +1,6 @@
+menuconfig RTFRAME_TEST_RINGBUFFER
+	bool "Ring buffer test"
+	default n
+	depends on SHELL
+	help
+	  Enable the ring buffer test module.

@@ -1,0 +1,5 @@
+config RTFRAME_LOG
+	bool "RTFrame log wrapper"
+	default y
+	help
+	  Enable the PX4-style log wrapper (PX4_INFO / PX4_ERR / PX4_WARN).

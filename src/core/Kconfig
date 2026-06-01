@@ -1,5 +1,10 @@
 menu "Core"
 
-# rsource "params/Kconfig"
+config RTFRAME_CORE
+    bool "RTFrame core runtime"
+    default y
+    help
+      Enable the RTFrame core runtime including work queue manager
+      and task self-registration system. Required by all other modules.
 
 endmenu # Core
