@@ -30,13 +30,22 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
-px4_add_module(
-	MODULE modules__dataman
-	MAIN dataman
-	COMPILE_FLAGS
-		-Wno-cast-align # TODO: fix and enable
-	SRCS
-		dataman.cpp
-	MODULE_CONFIG
-		parameters.yaml
-	)
+if(CONFIG_RTFRAME_DATAMAN)
+    zephyr_library_named(rtframe_dataman)
+
+    zephyr_library_sources(
+        dataman.cpp
+    )
+
+    zephyr_library_include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${RTFRAME_ROOT}/src/core
+        ${RTFRAME_ROOT}/src/include
+        ${RTFRAME_ROOT}/src/lib
+        ${RTFRAME_ROOT}/src/middleware/uorb
+    )
+
+    zephyr_library_compile_options(-Wno-cast-align -Wno-sign-compare)
+
+    zephyr_library_link_libraries(rtframe_core rtframe_hrt rtframe_perf rtframe_parameters rtframe_uorb)
+endif()

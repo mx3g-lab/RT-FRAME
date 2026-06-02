@@ -40,7 +40,7 @@
  * to the original console.
  */
 
-#include <px4_platform_common/px4_config.h>
+#include <visibility.h>
 
 
 #define CONSOLE_BUFFER_DEVICE "/dev/console_buf"

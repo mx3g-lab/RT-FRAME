@@ -10,5 +10,6 @@ config RTFRAME_MODULES
 rsource "logger/Kconfig"
 rsource "param_loader/Kconfig"
 rsource "tests/Kconfig"
+rsource "dataman/Kconfig"
 
 endmenu # Modules

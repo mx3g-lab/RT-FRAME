@@ -5,6 +5,7 @@
 #include <parameters/param.h>
 #include "task_register.h"
 #include "sd_sync.h"
+#include "dm_sync.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -252,8 +253,10 @@ void ParamLoader::run()
 
 	LOG_INF("[PARAM] ParamLoader done");
 
-	/* 通知所有等待 SD/param 就绪的模块（如 logger）可以开始操作文件系统 */
+	/* 通知所有等待 SD/param 就绪的模块（如 logger、dataman）可以开始了 */
 	sd_sync_give();
+	k_sleep(K_SECONDS(1));
+	dm_sync_give();
 }
 
 RTFRAME_TASK_REGISTER(ParamLoader, vwork::configs::param_auto_start, INIT_LEVEL_DRIVER, 0);

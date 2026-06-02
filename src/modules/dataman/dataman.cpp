@@ -41,15 +41,10 @@
  * @author David Sidrane
  */
 
-#include <px4_platform_common/px4_config.h>
-#include <px4_platform_common/defines.h>
-#include <px4_platform_common/module.h>
-#include <px4_platform_common/posix.h>
-#include <px4_platform_common/tasks.h>
-#include <px4_platform_common/getopt.h>
-#include <drivers/drv_hrt.h>
-#include <lib/parameters/param.h>
-#include <lib/perf/perf_counter.h>
+#include <defines.h>
+#include <hrt.h>
+#include <parameters/param.h>
+#include <perf/perf_counter.h>
 #include <stdlib.h>
 
 #include <uORB/Publication.hpp>
@@ -57,19 +52,47 @@
 #include <uORB/topics/dataman_request.h>
 #include <uORB/topics/dataman_response.h>
 
-#include "dataman.h"
+#include <zephyr/kernel.h>
+#include <log.h>
 
-__BEGIN_DECLS
-__EXPORT int dataman_main(int argc, char *argv[]);
-__END_DECLS
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <stdlib.h>
 
-#ifdef CONFIG_FS_LITTLEFS
-static constexpr int TASK_STACK_SIZE = 2000;  /* littlefs needs more stack */
-#else
-static constexpr int TASK_STACK_SIZE = 1420;
+/* Zephyr stubs for NuttX/PX4 APIs used by file backend */
+#ifndef O_BINARY
+#define O_BINARY 0
 #endif
+#ifndef PX4_O_MODE_666
+#define PX4_O_MODE_666 (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH)
+#endif
+#ifndef F_OK
+#define F_OK 0
+#endif
+static inline int px4_access(const char *path, int mode) {
+	struct stat st;
+	(void)mode;
+	return stat(path, &st) == 0 ? 0 : -1;
+}
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#include <vwork.h>
+#include "dataman.h"
+#include "task_register.h"
+#include "dm_sync.h"
+
+/* ── px4_getopt stub (Zephyr 不支持命令行参数解析) ── */
+static inline int px4_getopt(int argc, char *const argv[], const char *optstring,
+			     int *optind, const char **optarg) {
+	(void)argc; (void)argv; (void)optstring; (void)optind; (void)optarg;
+	return -1;
+}
+
+/* 前向声明，供 DatamanTask::run() 调用 */
+static int task_main_loop();
+
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 /* Private File based Operations */
 static ssize_t _file_write(dm_item_t item, unsigned index, const void *buf, size_t count);
 static ssize_t _file_read(dm_item_t item, unsigned index, void *buf, size_t count);
@@ -91,17 +114,23 @@ typedef struct dm_operations_t {
 	int (*clear)(dm_item_t item);
 	int (*initialize)(unsigned max_offset);
 	void (*shutdown)();
-	int (*wait)(px4_sem_t *sem);
+	int (*wait)(struct k_sem *sem);
 } dm_operations_t;
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+/* wait wrapper: k_sem_take 需要 timeout 参数，dm_operations_t::wait 只传 sem。 */
+static inline int _sem_wait_wrap(struct k_sem *sem)
+{
+	return k_sem_take(sem, K_FOREVER);
+}
+
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 static constexpr dm_operations_t dm_file_operations = {
 	.write   = _file_write,
 	.read    = _file_read,
 	.clear   = _file_clear,
 	.initialize = _file_initialize,
 	.shutdown = _file_shutdown,
-	.wait = px4_sem_wait,
+	.wait = _sem_wait_wrap,
 };
 #endif
 
@@ -111,7 +140,7 @@ static constexpr dm_operations_t dm_ram_operations = {
 	.clear   = _ram_clear,
 	.initialize = _ram_initialize,
 	.shutdown = _ram_shutdown,
-	.wait = px4_sem_wait,
+	.wait = _sem_wait_wrap,
 };
 
 static const dm_operations_t *g_dm_ops;
@@ -157,7 +186,10 @@ static uint8_t dataman_clients_count = 1;
 static perf_counter_t _dm_read_perf{nullptr};
 static perf_counter_t _dm_write_perf{nullptr};
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
+#ifndef PX4_STORAGEDIR
+#define PX4_STORAGEDIR "/SD:"
+#endif
 /* The data manager store file handle and file name */
 static const char *default_device_path = PX4_STORAGEDIR "/dataman";
 static char *k_data_manager_device_path = nullptr;
@@ -170,11 +202,30 @@ static enum {
 	BACKEND_LAST
 } backend = BACKEND_NONE;
 
-static px4_sem_t g_init_sema;
-
+static struct k_sem g_init_sema;
 static bool g_task_should_exit;	/**< if true, dataman task should exit */
 
-/* Work queue management functions */
+/* ============================================================
+ * DatamanTask — vwork::Thread 封装，承载主循环
+ * ============================================================ */
+class DatamanTask : public vwork::Thread
+{
+public:
+	DatamanTask() : vwork::Thread(vwork::configs::dataman) {}
+	~DatamanTask() override = default;
+
+	static void request_shutdown() { g_task_should_exit = true; }
+
+private:
+	void init() override;
+	void run() override {
+		PX4_INFO("DatamanTask running");
+		dm_sync_wait(K_FOREVER);
+		task_main_loop(); }
+	void callback() override {} /* Thread 模式默认循环由 run() 接管，callback 留空 */
+};
+
+static DatamanTask *_task{nullptr};
 
 static bool is_running()
 {
@@ -251,7 +302,7 @@ static ssize_t _ram_write(dm_item_t item, unsigned index, const void *buf, size_
 	return count;
 }
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 /* write to the data manager file */
 static ssize_t
 _file_write(dm_item_t item, unsigned index, const void *buf, size_t count)
@@ -374,7 +425,7 @@ static ssize_t _ram_read(dm_item_t item, unsigned index, void *buf, size_t count
 	return buffer[0];
 }
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 /* Retrieve from the data manager file */
 static ssize_t
 _file_read(dm_item_t item, unsigned index, void *buf, size_t count)
@@ -489,7 +540,7 @@ static int  _ram_clear(dm_item_t item)
 	return result;
 }
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 static int
 _file_clear(dm_item_t item)
 {
@@ -545,25 +596,25 @@ _file_clear(dm_item_t item)
 }
 #endif
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 static int
 _file_initialize(unsigned max_offset)
 {
-	const bool file_existed = (access(k_data_manager_device_path, F_OK) == 0);
+	const bool file_existed = (px4_access(k_data_manager_device_path, F_OK) == 0);
 
 	/* Open or create the data manager file */
 	dm_operations_data.file.fd = open(k_data_manager_device_path, O_RDWR | O_CREAT | O_BINARY, PX4_O_MODE_666);
 
 	if (dm_operations_data.file.fd < 0) {
 		PX4_WARN("Could not open data manager file %s", k_data_manager_device_path);
-		px4_sem_post(&g_init_sema); /* Don't want to hang startup */
+		k_sem_give(&g_init_sema); /* Don't want to hang startup */
 		return -1;
 	}
 
 	if ((unsigned)lseek(dm_operations_data.file.fd, max_offset, SEEK_SET) != max_offset) {
 		close(dm_operations_data.file.fd);
 		PX4_WARN("Could not seek data manager file %s", k_data_manager_device_path);
-		px4_sem_post(&g_init_sema); /* Don't want to hang startup */
+		k_sem_give(&g_init_sema); /* Don't want to hang startup */
 		return -1;
 	}
 
@@ -621,7 +672,7 @@ _ram_initialize(unsigned max_offset)
 
 	if (dm_operations_data.ram.data == nullptr) {
 		PX4_WARN("Could not allocate %u bytes of memory", max_offset);
-		px4_sem_post(&g_init_sema); /* Don't want to hang startup */
+		k_sem_give(&g_init_sema); /* Don't want to hang startup */
 		return -1;
 	}
 
@@ -632,7 +683,7 @@ _ram_initialize(unsigned max_offset)
 	return 0;
 }
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 static void
 _file_shutdown()
 {
@@ -648,12 +699,14 @@ _ram_shutdown()
 	dm_operations_data.running = false;
 }
 
-static int
-task_main(int argc, char *argv[])
+/* ============================================================
+ * DatamanTask::init 实现
+ * ============================================================ */
+void DatamanTask::init()
 {
 	/* Dataman can use disk or RAM */
 	switch (backend) {
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 
 	case BACKEND_FILE:
 		g_dm_ops = &dm_file_operations;
@@ -666,7 +719,7 @@ task_main(int argc, char *argv[])
 
 	default:
 		PX4_WARN("No valid backend set.");
-		return -1;
+		return;
 	}
 
 	/* Initialize global variables */
@@ -685,13 +738,6 @@ task_main(int argc, char *argv[])
 
 	g_task_should_exit = false;
 
-	uORB::Publication<dataman_response_s> dataman_response_pub{ORB_ID(dataman_response)};
-	const int dataman_request_sub = orb_subscribe(ORB_ID(dataman_request));
-
-	if (dataman_request_sub < 0) {
-		PX4_ERR("Failed to subscribe (%i)", errno);
-	}
-
 	_dm_read_perf = perf_alloc(PC_ELAPSED, MODULE_NAME": read");
 	_dm_write_perf = perf_alloc(PC_ELAPSED, MODULE_NAME": write");
 
@@ -699,15 +745,14 @@ task_main(int argc, char *argv[])
 
 	if (ret) {
 		g_task_should_exit = true;
-		goto end;
+		return;
 	}
 
 	switch (backend) {
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 
 	case BACKEND_FILE:
 		PX4_INFO("data manager file '%s' size is %u bytes", k_data_manager_device_path, max_offset);
-
 		break;
 #endif
 
@@ -719,109 +764,91 @@ task_main(int argc, char *argv[])
 		break;
 	}
 
-	px4_pollfd_struct_t fds;
-	fds.fd = dataman_request_sub;
-	fds.events = POLLIN;
-
 	/* Tell startup that the worker thread has completed its initialization */
-	px4_sem_post(&g_init_sema);
+	k_sem_give(&g_init_sema);
+}
+
+/* ============================================================
+ * 主循环（接管原 task_main 的循环体）
+ * ============================================================ */
+static int task_main_loop()
+{
+
+	PX4_INFO("task_main_loop running");
+	uORB::Publication<dataman_response_s> dataman_response_pub{ORB_ID(dataman_response)};
+	const int dataman_request_sub = orb_subscribe(ORB_ID(dataman_request));
+
+	if (dataman_request_sub < 0) {
+		PX4_ERR("Failed to subscribe (%i)", errno);
+	}
 
 	/* Start the endless loop, waiting for then processing work requests */
 	while (true) {
+		/* 1s timeout — 允许定期检查 g_task_should_exit */
+		(void)k_sem_take(&g_init_sema, K_MSEC(1000));
 
-		ret = px4_poll(&fds, 1, 1000);
+		/* 有请求到达：sem 被 uORB subsystem 释放（如果有的话）。
+		 * 为兼容性，仍用 orb_check 确认。 */
+		bool updated = false;
+		orb_check(dataman_request_sub, &updated);
 
-		if (ret > 0) {
+		if (updated) {
+			dataman_request_s request;
+			orb_copy(ORB_ID(dataman_request), dataman_request_sub, &request);
 
-			bool updated = false;
-			orb_check(dataman_request_sub, &updated);
+			dataman_response_s response{};
+			response.client_id = request.client_id;
+			response.request_type = request.request_type;
+			response.item = request.item;
+			response.index = request.index;
+			response.status = dataman_response_s::STATUS_FAILURE_NO_DATA;
 
-			if (updated) {
+			ssize_t result;
 
-				dataman_request_s request;
-				orb_copy(ORB_ID(dataman_request), dataman_request_sub, &request);
+			switch (request.request_type) {
 
-				dataman_response_s response{};
-				response.client_id = request.client_id;
-				response.request_type = request.request_type;
-				response.item = request.item;
-				response.index = request.index;
-				response.status = dataman_response_s::STATUS_FAILURE_NO_DATA;
-
-				ssize_t result;
-
-				switch (request.request_type) {
-
-				case DM_GET_ID:
-					if (dataman_clients_count < UINT8_MAX) {
-						response.client_id = dataman_clients_count++;
-						/* Send the timestamp of the request over the data buffer so that the "dataman client"
-						 * can distinguish whether the request was made by it. */
-						memcpy(response.data, &request.timestamp, sizeof(hrt_abstime));
-
-					} else {
-						PX4_ERR("Max Dataman clients reached!");
-					}
-
-					break;
-
-				case DM_WRITE:
-
-					g_func_counts[DM_WRITE]++;
-					perf_begin(_dm_write_perf);
-					result = g_dm_ops->write(static_cast<dm_item_t>(request.item), request.index,
-								 &(request.data), request.data_length);
-					perf_end(_dm_write_perf);
-
-					if (result > 0) {
-						response.status = dataman_response_s::STATUS_SUCCESS;
-
-					} else {
-						response.status = dataman_response_s::STATUS_FAILURE_WRITE_FAILED;
-					}
-
-					break;
-
-				case DM_READ:
-
-					g_func_counts[DM_READ]++;
-					perf_begin(_dm_read_perf);
-					result = g_dm_ops->read(static_cast<dm_item_t>(request.item), request.index,
-								&(response.data), request.data_length);
-
-					perf_end(_dm_read_perf);
-
-					if (result >= 0) {
-						response.status = dataman_response_s::STATUS_SUCCESS;
-
-					} else {
-						response.status = dataman_response_s::STATUS_FAILURE_READ_FAILED;
-					}
-
-					break;
-
-				case DM_CLEAR:
-
-					g_func_counts[DM_CLEAR]++;
-					result = g_dm_ops->clear(static_cast<dm_item_t>(request.item));
-
-					if (result == 0) {
-						response.status = dataman_response_s::STATUS_SUCCESS;
-
-					} else {
-						response.status = dataman_response_s::STATUS_FAILURE_CLEAR_FAILED;
-					}
-
-					break;
-
-				default:
-					break;
-
+			case DM_GET_ID:
+				if (dataman_clients_count < UINT8_MAX) {
+					response.client_id = dataman_clients_count++;
+					memcpy(response.data, &request.timestamp, sizeof(hrt_abstime));
+				} else {
+					PX4_ERR("Max Dataman clients reached!");
 				}
+				break;
 
-				response.timestamp = hrt_absolute_time();
-				dataman_response_pub.publish(response);
+			case DM_WRITE:
+				g_func_counts[DM_WRITE]++;
+				perf_begin(_dm_write_perf);
+				result = g_dm_ops->write(static_cast<dm_item_t>(request.item), request.index,
+							 &(request.data), request.data_length);
+				perf_end(_dm_write_perf);
+				response.status = (result > 0) ? dataman_response_s::STATUS_SUCCESS :
+								dataman_response_s::STATUS_FAILURE_WRITE_FAILED;
+				break;
+
+			case DM_READ:
+				g_func_counts[DM_READ]++;
+				perf_begin(_dm_read_perf);
+				result = g_dm_ops->read(static_cast<dm_item_t>(request.item), request.index,
+							&(response.data), request.data_length);
+				perf_end(_dm_read_perf);
+				response.status = (result >= 0) ? dataman_response_s::STATUS_SUCCESS :
+								dataman_response_s::STATUS_FAILURE_READ_FAILED;
+				break;
+
+			case DM_CLEAR:
+				g_func_counts[DM_CLEAR]++;
+				result = g_dm_ops->clear(static_cast<dm_item_t>(request.item));
+				response.status = (result == 0) ? dataman_response_s::STATUS_SUCCESS :
+								dataman_response_s::STATUS_FAILURE_CLEAR_FAILED;
+				break;
+
+			default:
+				break;
 			}
+
+			response.timestamp = hrt_absolute_time();
+			dataman_response_pub.publish(response);
 		}
 
 		/* time to go???? */
@@ -831,15 +858,10 @@ task_main(int argc, char *argv[])
 	}
 
 	orb_unsubscribe(dataman_request_sub);
-
 	g_dm_ops->shutdown();
-
-end:
-	backend = BACKEND_NONE;
 
 	perf_free(_dm_read_perf);
 	_dm_read_perf = nullptr;
-
 	perf_free(_dm_write_perf);
 	_dm_write_perf = nullptr;
 
@@ -849,25 +871,17 @@ end:
 static int
 start()
 {
-	px4_sem_init(&g_init_sema, 1, 0);
+	k_sem_init(&g_init_sema, 1, 0);
+	_task = new DatamanTask();
 
-	/* g_init_sema use case is a signal */
-
-	px4_sem_setprotocol(&g_init_sema, SEM_PRIO_NONE);
-
-	/* start the worker thread with low priority for disk IO */
-	if (px4_task_spawn_cmd("dataman", SCHED_DEFAULT, SCHED_PRIORITY_DEFAULT - 10,
-			       PX4_STACK_ADJUSTED(TASK_STACK_SIZE), task_main,
-			       nullptr) < 0) {
-		px4_sem_destroy(&g_init_sema);
+	if (!_task || !_task->start(0)) {
 		PX4_ERR("task start failed");
+		delete _task;
+		_task = nullptr;
 		return -1;
 	}
 
-	/* wait for the thread to actually initialize */
-	px4_sem_wait(&g_init_sema);
-	px4_sem_destroy(&g_init_sema);
-
+	k_sem_take(&g_init_sema, K_FOREVER);
 	return 0;
 }
 
@@ -887,38 +901,15 @@ static void
 stop()
 {
 	/* Tell the worker task to shut down */
-	g_task_should_exit = true;
+	if (_task) {
+		DatamanTask::request_shutdown();
+	}
 }
 
 static void
 usage()
 {
-	PRINT_MODULE_DESCRIPTION(
-		R"DESCR_STR(
-### Description
-Module to provide persistent storage for the rest of the system in form of a simple database through a C API.
-Multiple backends are supported depending on the board:
-- a file (eg. on the SD card)
-- RAM (this is obviously not persistent)
 
-It is used to store structured data of different types: mission waypoints, mission state and geofence polygons.
-Each type has a specific type and a fixed maximum amount of storage items, so that fast random access is possible.
-
-### Implementation
-Reading and writing a single item is always atomic.
-
-)DESCR_STR");
-
-	PRINT_MODULE_USAGE_NAME("dataman", "system");
-	PRINT_MODULE_USAGE_COMMAND("start");
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
-	PRINT_MODULE_USAGE_PARAM_STRING('f', nullptr, "<file>", "Storage file", true);
-#endif
-	PRINT_MODULE_USAGE_PARAM_FLAG('r', "Use RAM backend (NOT persistent)", true);
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
-	PRINT_MODULE_USAGE_PARAM_COMMENT("The options -f and -r are mutually exclusive. If nothing is specified, a file 'dataman' is used");
-#endif
-	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 }
 
 static int backend_check()
@@ -932,8 +923,7 @@ static int backend_check()
 	return 0;
 }
 
-int
-dataman_main(int argc, char *argv[])
+int dataman_main(int argc, char *argv[])
 {
 	if (argc < 2) {
 		usage();
@@ -951,8 +941,6 @@ dataman_main(int argc, char *argv[])
 		int dmoptind = 1;
 		const char *dmoptarg = nullptr;
 
-		/* jump over start and look at options first */
-
 		while ((ch = px4_getopt(argc, argv, "f:r", &dmoptind, &dmoptarg)) != EOF) {
 			switch (ch) {
 			case 'f':
@@ -960,7 +948,7 @@ dataman_main(int argc, char *argv[])
 					return -1;
 				}
 
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 				backend = BACKEND_FILE;
 				k_data_manager_device_path = strdup(dmoptarg);
 				PX4_INFO("dataman file set to: %s", k_data_manager_device_path);
@@ -986,7 +974,7 @@ dataman_main(int argc, char *argv[])
 		}
 
 		if (backend == BACKEND_NONE) {
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 			backend = BACKEND_FILE;
 			k_data_manager_device_path = strdup(default_device_path);
 #else
@@ -998,7 +986,7 @@ dataman_main(int argc, char *argv[])
 
 		if (!is_running()) {
 			PX4_ERR("dataman start failed");
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 			free(k_data_manager_device_path);
 			k_data_manager_device_path = nullptr;
 #endif
@@ -1017,7 +1005,7 @@ dataman_main(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "stop")) {
 		stop();
-#ifdef CONFIG_DATAMAN_PERSISTENT_STORAGE
+#ifdef CONFIG_RTFRAME_DATAMAN_PERSISTENT_STORAGE
 		free(k_data_manager_device_path);
 		k_data_manager_device_path = nullptr;
 #endif
@@ -1040,3 +1028,5 @@ static_assert(sizeof(dataman_response_s::data) >= MISSION_ITEM_SIZE, "mission_it
 static_assert(sizeof(dataman_response_s::data) >= MISSION_SIZE, "mission_s can't fit in the response data");
 static_assert(sizeof(dataman_response_s::data) >= DATAMAN_COMPAT_SIZE, "dataman_compat_s can't fit in the response data");
 static_assert(sizeof(dataman_response_s::data) >= sizeof(hrt_abstime), "hrt_abstime can't fit in the response data");
+
+RTFRAME_TASK_REGISTER(DatamanTask, vwork::configs::dataman, INIT_LEVEL_APP, 0);

@@ -1,0 +1,5 @@
+zephyr_library_named(rtframe_console_buffer)
+zephyr_library_sources(console_buffer.cpp)
+zephyr_library_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+zephyr_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+zephyr_library_compile_definitions(BOARD_ENABLE_CONSOLE_BUFFER=1)

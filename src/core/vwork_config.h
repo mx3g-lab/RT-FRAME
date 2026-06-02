@@ -75,6 +75,7 @@ struct config_t {
 	X(pub,		 "vwork:pub",       4096, PRIORITY_DEFAULT,   Model::THREAD)    \
 	X(param_auto_start, "vwork:param_auto_start", 8192, PRIORITY_FS,      Model::THREAD)    \
 	X(param_autosave, "vwork:param_autosave",  8192, PRIORITY_FS,      Model::WORKQUEUE) \
+	X(dataman,         "vwork:dataman",   4096, PRIORITY_FS,      Model::THREAD)    \
 	X(logger,         "vwork:logger",       8192, PRIORITY_DEFAULT, Model::THREAD)    \
 	X(log_writer,     "vwork:log_writer",   4096, PRIORITY_FS,      Model::THREAD)
 

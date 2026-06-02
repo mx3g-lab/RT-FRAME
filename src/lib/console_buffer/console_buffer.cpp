@@ -31,25 +31,21 @@
  *
  ****************************************************************************/
 
-#include <px4_platform_common/px4_config.h>
-#include <px4_platform_common/console_buffer.h>
-#include <px4_platform_common/defines.h>
-#include <px4_platform_common/sem.h>
-#include <pthread.h>
+#include "console_buffer.h"
+#include <defines.h>
+#include <zephyr/kernel.h>
 #include <string.h>
-#include <fcntl.h>
 
 #ifdef BOARD_ENABLE_CONSOLE_BUFFER
 #ifndef BOARD_CONSOLE_BUFFER_SIZE
 # define BOARD_CONSOLE_BUFFER_SIZE (1024*4) // default buffer size
 #endif
 
-static ssize_t console_buffer_write(struct file *filep, const char *buffer, size_t buflen);
-
 
 class ConsoleBuffer
 {
 public:
+	ConsoleBuffer() { k_mutex_init(&_lock); }
 
 	void write(const char *buffer, size_t len);
 
@@ -60,13 +56,13 @@ public:
 	int read(char *buffer, int buffer_length, int *offset);
 
 private:
-	void		lock() { do {} while (px4_sem_wait(&_lock) != 0); }
-	void		unlock() { px4_sem_post(&_lock); }
+	void		lock() { k_mutex_lock(&_lock, K_FOREVER); }
+	void		unlock() { k_mutex_unlock(&_lock); }
 
 	char _buffer[BOARD_CONSOLE_BUFFER_SIZE];
 	int _head{0};
 	int _tail{0};
-	px4_sem_t _lock = SEM_INITIALIZER(1);
+	struct k_mutex _lock;
 };
 
 void ConsoleBuffer::print(bool follow)
@@ -90,7 +86,7 @@ void ConsoleBuffer::print(bool follow)
 				break;
 			}
 
-			::write(1, buffer, read_size);
+			::fwrite(buffer, 1, read_size, stdout);
 
 			if (read_size < buffer_length) {
 				break;
@@ -101,7 +97,7 @@ void ConsoleBuffer::print(bool follow)
 
 
 		if (follow) {
-			usleep(10000);
+			k_msleep(10);
 		}
 	} while (follow);
 }
@@ -193,37 +189,16 @@ void px4_console_buffer_print(bool follow)
 	g_console_buffer.print(follow);
 }
 
-ssize_t console_buffer_write(struct file *filep, const char *buffer, size_t len)
+void px4_console_buffer_write(const char *buffer, size_t len)
 {
 	g_console_buffer.write(buffer, len);
 
-	// stderr still points to our original console and is available from everywhere, so we output to that.
-	// We could use up_putc() as well, but it is considerably less efficient.
-	// The drawback here is that a module writing to stderr bypasses the console buffer.
-	write(2, buffer, len);
-	fsync(2);
-
-	return len;
+	fwrite(buffer, 1, len, stderr);
 }
-
-static const struct file_operations g_console_buffer_fops = {
-	NULL,         /* open */
-	NULL,         /* close */
-	NULL,         /* read */
-	console_buffer_write, /* write */
-	NULL,         /* seek */
-	NULL          /* ioctl */
-#ifndef CONFIG_DISABLE_POLL
-	, NULL        /* poll */
-#endif
-#ifndef CONFIG_DISABLE_PSEUDOFS_OPERATIONS
-	, NULL        /* unlink */
-#endif
-};
 
 int px4_console_buffer_init()
 {
-	return register_driver(CONSOLE_BUFFER_DEVICE, &g_console_buffer_fops, 0666, NULL);
+	return 0;
 }
 
 int px4_console_buffer_size()
