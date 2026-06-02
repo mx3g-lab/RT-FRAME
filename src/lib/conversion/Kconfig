@@ -1,0 +1,7 @@
+config RTFRAME_CONVERSION
+    bool "Vector rotation library"
+    default y
+    depends on RTFRAME_MATHLIB && RTFRAME_MATRIX
+    help
+      Vector rotation library for coordinate frame transformations.
+      Defines 32+ rotation types and provides transformation functions.

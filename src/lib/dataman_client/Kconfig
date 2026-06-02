@@ -1,0 +1,8 @@
+config RTFRAME_DATAMAN_CLIENT
+    bool "Dataman client library"
+    default y
+    depends on RTFRAME_HRT
+    help
+      Client interface for dataman storage service.
+      Provides sync/async read/write/clear operations with timeout.
+      Note: Requires dataman module to be functional.

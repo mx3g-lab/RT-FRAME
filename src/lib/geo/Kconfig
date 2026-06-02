@@ -1,0 +1,8 @@
+config RTFRAME_GEO
+    bool "Geodetic calculation library"
+    default y
+    depends on RTFRAME_MATHLIB && RTFRAME_MATRIX
+    help
+      Geodetic calculations and coordinate transformations.
+      Provides waypoint distance/bearing, map projection (lat/lon to NED),
+      and crosstrack error calculations.

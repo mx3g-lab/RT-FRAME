@@ -1,0 +1,8 @@
+config RTFRAME_CIRCUIT_BREAKER
+    bool "Circuit breaker library"
+    default y
+    depends on RTFRAME_PARAM
+    help
+      Circuit breaker functionality for disabling safety checks.
+      Safety warning: Circuit breakers should only be used during
+      testing and debugging. Do not use in production flight.

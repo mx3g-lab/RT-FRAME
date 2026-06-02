@@ -1,0 +1,7 @@
+config RTFRAME_AIRSPEED
+    bool "Airspeed calculation library"
+    default y
+    depends on RTFRAME_ATMOSPHERE
+    help
+      Airspeed estimation from pitot/static pressure sensors.
+      Calculates IAS and TAS with compensation for sensor types.

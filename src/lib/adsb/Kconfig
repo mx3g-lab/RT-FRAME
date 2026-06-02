@@ -1,0 +1,7 @@
+config RTFRAME_ADSB
+    bool "ADSB conflict detection library"
+    default y
+    depends on RTFRAME_GEO && RTFRAME_HRT
+    help
+      ADSB conflict detection and collision avoidance.
+      Manages traffic data buffers and calculates conflict warnings.

@@ -8,6 +8,7 @@
 
 | 计划文件 | 标题 | 创建日期 | 最后更新 | 状态 |
 | -------- | ---- | -------- | -------- | ---- |
+| [mavlink_zephyr_adaptation.md](mavlink_zephyr_adaptation.md) | MAVLink 模块 Zephyr 适配 | 2026-06-02 | 2026-06-02 | v3 更新：多实例独立 vwork 槽位 |
 | （暂无） | - | - | - | - |
 
 ---

@@ -1,0 +1,6 @@
+config RTFRAME_ATMOSPHERE
+    bool "Atmosphere model library"
+    default y
+    help
+      US Standard Atmosphere 1976 model for density, pressure,
+      and altitude conversions up to 11km altitude.

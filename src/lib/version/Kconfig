@@ -1,0 +1,7 @@
+config RTFRAME_VERSION
+    bool "Version library"
+    default y
+    help
+      System version detection and reporting with git integration.
+      Provides build URI, firmware version, git branch/tag information,
+      and board hardware version.

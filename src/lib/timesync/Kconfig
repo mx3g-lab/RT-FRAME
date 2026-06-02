@@ -1,0 +1,7 @@
+config RTFRAME_TIMESYNC
+    bool "Time synchronization library"
+    default y
+    depends on RTFRAME_HRT
+    help
+      Time synchronization between local and remote systems.
+      Implements exponential filtering for clock offset/skew estimation.

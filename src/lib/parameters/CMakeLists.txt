@@ -10,6 +10,10 @@ if(CONFIG_RTFRAME_PARAM)
     set(PARAM_YAML_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/events_params.yaml
         ${RTFRAME_ROOT}/src/modules/logger/module.yaml
+        ${RTFRAME_ROOT}/src/lib/adsb/parameters.yaml
+        ${RTFRAME_ROOT}/src/lib/circuit_breaker/circuit_breaker_params.yaml
+        ${RTFRAME_ROOT}/src/modules/dataman/parameters.yaml
+        ${RTFRAME_ROOT}/src/modules/logger/module_params_crypto.yaml
     )
 
     set(generated_params_dir  ${CMAKE_CURRENT_BINARY_DIR}/generated_params)
