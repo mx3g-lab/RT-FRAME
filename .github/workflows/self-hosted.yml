@@ -44,7 +44,9 @@ jobs:
         .venv/bin/pip install -r middlewares/zephyr/scripts/requirements.txt
 
     - name: Build ${{ matrix.target }}
-      run: make ${{ matrix.target }}
+      run: |
+        export NINJA_STATUS="[%f/%t] "
+        nice -n 19 make ${{ matrix.target }}
 
     - name: Build report
       run: |
