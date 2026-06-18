@@ -1,0 +1,56 @@
+menuconfig RTFRAME_MAVLINK
+    bool "MAVLink communication module"
+    default n
+    depends on RTFRAME_MODULES && RTFRAME_UORB
+    help
+      Enable MAVLink v2.0 communication module. Provides serial (UART)
+      and optionally UDP transport for MAVLink telemetry, commands,
+      parameters, and mission protocol.
+
+if RTFRAME_MAVLINK
+
+config RTFRAME_MAVLINK_DIALECT
+    string "MAVLink dialect"
+    default "common"
+    help
+      MAVLink XML dialect to generate C headers from.
+      Options: common, ardupilotmega, etc.
+
+config RTFRAME_MAVLINK_FTP
+    bool "MAVLink FTP protocol"
+    default n
+    help
+      Remote file system access via MAVLink FTP.
+
+config RTFRAME_MAVLINK_EVENTS
+    bool "MAVLink Events protocol"
+    default n
+    help
+      EVENT and CURRENT_SEQUENCE message support.
+
+config RTFRAME_MAVLINK_ULOG
+    bool "MAVLink ULog streaming"
+    default n
+    help
+      Stream ULog data over MAVLink LOGGING_DATA messages.
+
+config RTFRAME_MAVLINK_MISSION
+    bool "MAVLink Mission protocol"
+    default n
+    depends on RTFRAME_DATAMAN
+    help
+      Mission upload/download via MAVLink MISSION_ITEM protocol.
+
+config RTFRAME_MAVLINK_ODID
+    bool "Open Drone ID support"
+    default n
+    help
+      Open Drone ID MAVLink message translation.
+
+config RTFRAME_MAVLINK_TUNES
+    bool "Tune playback support"
+    default n
+    help
+      PLAY_TUNE / PLAY_TUNE_V2 MAVLink message handling.
+
+endif # RTFRAME_MAVLINK

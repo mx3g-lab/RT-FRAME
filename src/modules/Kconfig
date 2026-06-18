@@ -11,5 +11,6 @@ rsource "logger/Kconfig"
 rsource "param_loader/Kconfig"
 rsource "tests/Kconfig"
 rsource "dataman/Kconfig"
+rsource "mavlink_new/Kconfig"
 
 endmenu # Modules

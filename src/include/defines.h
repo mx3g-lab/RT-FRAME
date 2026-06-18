@@ -23,6 +23,14 @@ static inline constexpr bool PX4_ISFINITE(double x) { return __builtin_isfinite(
 #define PX4_ISFINITE(x) __builtin_isfinite(x)
 #endif
 
+/* ─── 文件系统路径 ────────────────────────────────────────────────────────── */
+#ifndef PX4_ROOTFSDIR
+#define PX4_ROOTFSDIR "/SD:"
+#endif
+#ifndef PX4_STORAGEDIR
+#define PX4_STORAGEDIR "/SD:"
+#endif
+
 /* ─── 数学常量 ───────────────────────────────────────────────────────────── */
 #define M_PI_F          3.14159265f
 #define M_TWOPI_F       6.28318531f
