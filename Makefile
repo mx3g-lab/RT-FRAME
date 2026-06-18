@@ -2,10 +2,11 @@ BUILD := ./build.sh
 
 VMU_CM7 := targets/nxp/vmu_rt1170/cm7
 VMU_CM4 := targets/nxp/vmu_rt1170/cm4
+PC_NATIVE := targets/pc/native_sim
 
-.PHONY: all cm7 cm4 \
+.PHONY: all cm7 cm4 native native-clean native-run \
         flash_cm7 flash_cm4 \
-        menuconfig_cm7 menuconfig_cm4 \
+        menuconfig_cm7 menuconfig_cm4 menuconfig_native \
         guiconfig_cm7 guiconfig_cm4 \
         sync_cm7 sync_cm4 \
         clean help
@@ -18,6 +19,15 @@ cm7:
 cm4:
 	$(BUILD) -p $(VMU_CM4) -b
 
+native:
+	$(BUILD) -p $(PC_NATIVE) -b
+
+native-clean:
+	$(BUILD) -p $(PC_NATIVE) -c -b
+
+native-run: native
+	./build/pc/native_sim/zephyr/zephyr.exe
+
 flash_cm7:
 	$(BUILD) -p $(VMU_CM7) -f
 
@@ -29,6 +39,9 @@ menuconfig_cm7:
 
 menuconfig_cm4:
 	$(BUILD) -p $(VMU_CM4) -k
+
+menuconfig_native:
+	$(BUILD) -p $(PC_NATIVE) -k
 
 guiconfig_cm7:
 	$(BUILD) -p $(VMU_CM7) -g
@@ -50,10 +63,14 @@ help:
 	@echo "  all              - Build CM7 (default)"
 	@echo "  cm7              - Build CM7"
 	@echo "  cm4              - Build CM4"
+	@echo "  native           - Build PC native_sim"
+	@echo "  native-clean     - Clean + build PC native_sim"
+	@echo "  native-run       - Build + run PC native_sim"
 	@echo "  flash_cm7        - Flash CM7 via JLink"
 	@echo "  flash_cm4        - Flash CM4 via JLink"
 	@echo "  menuconfig_cm7   - Terminal Kconfig UI for CM7"
 	@echo "  menuconfig_cm4   - Terminal Kconfig UI for CM4"
+	@echo "  menuconfig_native - Terminal Kconfig UI for native_sim"
 	@echo "  guiconfig_cm7    - GUI Kconfig UI for CM7"
 	@echo "  guiconfig_cm4    - GUI Kconfig UI for CM4"
 	@echo "  sync_cm7         - Sync .config -> CM7 defconfig"

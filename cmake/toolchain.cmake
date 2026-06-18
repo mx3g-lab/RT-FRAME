@@ -5,6 +5,13 @@
 #   3. GNUARMEMB_TOOLCHAIN_PATH (cmake var or env)
 #   4. System PATH arm-none-eabi-gcc
 
+# --- Host toolchain for native_sim ---
+if("${BOARD}" MATCHES "^native_sim")
+  set(ZEPHYR_TOOLCHAIN_VARIANT host CACHE STRING "")
+  message(STATUS "Toolchain: host compiler (native_sim)")
+  return()
+endif()
+
 # --- Zephyr SDK path resolution ---
 if(NOT DEFINED ZEPHYR_SDK_INSTALL_DIR AND DEFINED ENV{ZEPHYR_SDK_INSTALL_DIR})
   set(ZEPHYR_SDK_INSTALL_DIR $ENV{ZEPHYR_SDK_INSTALL_DIR})

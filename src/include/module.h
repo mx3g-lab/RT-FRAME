@@ -8,6 +8,22 @@
 
 #include <zephyr/kernel.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+/* Default module name (can be overridden before including this header) */
+#ifndef MODULE_NAME
+#define MODULE_NAME "rtframe_module"
+#endif
+
+/* Module usage printing (PX4 CLI stubs for Zephyr) */
+#define PRINT_MODULE_USAGE_NAME(name, desc)              (void)(name); (void)(desc)
+#define PRINT_MODULE_USAGE_NAME_SIMPLE(name, desc)       (void)(name); (void)(desc)
+#define PRINT_MODULE_USAGE_PARAM_INT(key, desc, optional) (void)(key); (void)(desc); (void)(optional)
+#define PRINT_MODULE_USAGE_PARAM_STRING(key, dflt, vals, desc, opt) (void)(key); (void)(dflt); (void)(vals); (void)(desc); (void)(opt)
+#define PRINT_MODULE_USAGE_PARAM_FLAG(key, desc, opt)    (void)(key); (void)(desc); (void)(opt)
+#define PRINT_MODULE_USAGE_ARG(key, desc, optional)      (void)(key); (void)(desc); (void)(optional)
+#define PRINT_MODULE_USAGE_COMMAND_DESCR(key, desc)      (void)(key); (void)(desc)
+#define PRINT_MODULE_DESCRIPTION(desc)                   (void)(desc)
 
 /* --- px4_main_t: standard PX4 task entry signature --- */
 typedef int (*px4_main_t)(int argc, char *argv[]);

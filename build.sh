@@ -72,7 +72,6 @@ load_target() {
     source "$conf"
     [ -n "$BUILD_DIR" ]    || die "BUILD_DIR not set in target.conf"
     [ -n "$CMAKE_SOURCE" ] || die "CMAKE_SOURCE not set in target.conf"
-    [ -n "$DEFCONFIG" ]    || die "DEFCONFIG not set in target.conf"
 }
 
 do_clean() {
@@ -124,6 +123,10 @@ do_guiconfig() {
 }
 
 do_sync() {
+    if [ -z "$DEFCONFIG" ]; then
+        info "No DEFCONFIG configured — skipping sync"
+        return 0
+    fi
     info "Syncing .config for $TARGET_NAME ..."
     python3 tools/sync_defconfig.py \
         --target-dir "$TARGET_DIR" \

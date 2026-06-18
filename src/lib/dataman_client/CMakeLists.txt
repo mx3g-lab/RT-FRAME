@@ -7,6 +7,7 @@ if(CONFIG_RTFRAME_DATAMAN_CLIENT)
 
     zephyr_library_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${RTFRAME_ROOT}/src
         ${RTFRAME_ROOT}/src/include
     )
     zephyr_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
