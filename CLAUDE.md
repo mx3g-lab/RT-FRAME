@@ -15,6 +15,22 @@
 
 ---
 
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues at `mx3g-lab/RT-FRAME` (via `gh` CLI). PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout: `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
+
+---
+
 ## 项目强约束（来源 docs/rules/，违反即为 bug）
 
 以下规则在 `docs/rules/` 下有完整版本，此处为强制要点摘要。
