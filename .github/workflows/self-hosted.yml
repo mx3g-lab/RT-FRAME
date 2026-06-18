@@ -1,65 +1,73 @@
-name: CI (Self-hosted ARM64)
-
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-
-concurrency:
-  group: ci-arm64-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  build:
-    runs-on: [self-hosted, arm64, rk3588]
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: cm7
-            target_dir: targets/nxp/vmu_rt1170/cm7
-            build_dir: build/nxp/vmu_rt1170/cm7
-          - target: cm4
-            target_dir: targets/nxp/vmu_rt1170/cm4
-            build_dir: build/nxp/vmu_rt1170/cm4
-
-    name: build ${{ matrix.target }}
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Install Zephyr SDK (arm-zephyr-eabi)
-      run: bash tools/setup_env.sh
-
-    - name: Setup Python venv
-      run: |
-        python3 -m venv .venv
-        .venv/bin/pip install --upgrade pip
-        .venv/bin/pip install empy==3.3.4 pyros-genmsg
-        .venv/bin/pip install -r middlewares/zephyr/scripts/requirements.txt
-
-    - name: Build ${{ matrix.target }}
-      run: |
-        export NINJA_STATUS="[%f/%t] "
-        nice -n 19 make ${{ matrix.target }}
-
-    - name: Build report
-      run: |
-        echo "=== Output files ==="
-        find ${{ matrix.build_dir }}/zephyr -maxdepth 1 \
-          -name "zephyr.elf" -o -name "zephyr.bin" -o -name "zephyr.hex" \
-          | xargs ls -lh 2>/dev/null || true
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: rtframe-arm64-${{ matrix.target }}
-        path: |
-          ${{ matrix.build_dir }}/zephyr/zephyr.elf
-          ${{ matrix.build_dir }}/zephyr/zephyr.bin
-          ${{ matrix.build_dir }}/zephyr/zephyr.hex
+# CI (Self-hosted ARM64) — DISABLED
+# Local ARM64 runner (rk3588) is retired. Only GitHub-hosted cloud CI is active.
+# See: cmake-multi-platform.yml
+#
+# Original self-hosted workflow preserved below for reference if the runner is
+# reactivated. Uncomment and restore the `on:` block to re-enable.
+#
+# --- original content (commented out) ---
+# name: CI (Self-hosted ARM64)
+#
+# on:
+#   push:
+#     branches: ["main"]
+#   pull_request:
+#     branches: ["main"]
+#
+# concurrency:
+#   group: ci-arm64-${{ github.ref }}
+#   cancel-in-progress: true
+#
+# jobs:
+#   build:
+#     runs-on: [self-hosted, arm64, rk3588]
+#
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         include:
+#           - target: cm7
+#             target_dir: targets/nxp/vmu_rt1170/cm7
+#             build_dir: build/nxp/vmu_rt1170/cm7
+#           - target: cm4
+#             target_dir: targets/nxp/vmu_rt1170/cm4
+#             build_dir: build/nxp/vmu_rt1170/cm4
+#
+#     name: build ${{ matrix.target }}
+#
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v4
+#       with:
+#         submodules: recursive
+#
+#     - name: Install Zephyr SDK (arm-zephyr-eabi)
+#       run: bash tools/setup_env.sh
+#
+#     - name: Setup Python venv
+#       run: |
+#         python3 -m venv .venv
+#         .venv/bin/pip install --upgrade pip
+#         .venv/bin/pip install empy==3.3.4 pyros-genmsg
+#         .venv/bin/pip install -r middlewares/zephyr/scripts/requirements.txt
+#
+#     - name: Build ${{ matrix.target }}
+#       run: |
+#         export NINJA_STATUS="[%f/%t] "
+#         nice -n 19 make ${{ matrix.target }}
+#
+#     - name: Build report
+#       run: |
+#         echo "=== Output files ==="
+#         find ${{ matrix.build_dir }}/zephyr -maxdepth 1 \
+#           -name "zephyr.elf" -o -name "zephyr.bin" -o -name "zephyr.hex" \
+#           | xargs ls -lh 2>/dev/null || true
+#
+#     - name: Upload artifacts
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: rtframe-arm64-${{ matrix.target }}
+#         path: |
+#           ${{ matrix.build_dir }}/zephyr/zephyr.elf
+#           ${{ matrix.build_dir }}/zephyr/zephyr.bin
+#           ${{ matrix.build_dir }}/zephyr/zephyr.hex
