@@ -50,8 +50,13 @@
 #include <crc/crc.h>
 #include <float.h>
 #include <math.h>
+#ifdef CONFIG_ARCH_POSIX
+#include <fcntl.h>
+#include <unistd.h>
+#else
 #include <zephyr/posix/fcntl.h>
 #include <zephyr/posix/unistd.h>
+#endif
 #include <string.h>
 
 #include <structs/Bitset.hpp>
@@ -65,7 +70,7 @@
 #define PX4_O_MODE_666 0
 #endif
 
-/* Zephyr POSIX compat */
+/* Zephyr compat — use k_mutex directly to avoid pthread.h conflicts */
 #define pthread_mutex_lock(m)    k_mutex_lock((m), K_FOREVER)
 #define pthread_mutex_trylock(m) k_mutex_lock((m), K_NO_WAIT)
 #define pthread_mutex_unlock(m)  k_mutex_unlock((m))

@@ -1,7 +1,7 @@
 config RTFRAME_TUNES
     bool "Tune playback library"
     default y
-    depends on RTFRAME_CIRCUIT_BREAKER
+    depends on RTFRAME_CIRCUIT_BREAKER && RTFRAME_UORB
     help
       Melody/tune playback library with queue management.
       Parses tune strings (GWBasic/QBasic syntax).

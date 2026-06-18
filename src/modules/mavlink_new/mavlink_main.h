@@ -42,35 +42,7 @@
 
 #pragma once
 
-#ifdef CONFIG_ARCH_POSIX
-/*
- * native_sim: map pthread → Zephyr k_mutex / k_thread to avoid
- * conflicts between Zephyr posix_types.h and host glibc pthread.h.
- */
-#include <zephyr/kernel.h>
-/* pthread_mutex_t → k_mutex */
-#define pthread_mutex_t            struct k_mutex
-#define pthread_mutex_init(m, a)   k_mutex_init(m)
-#define pthread_mutex_lock(m)      k_mutex_lock(m, K_FOREVER)
-#define pthread_mutex_unlock(m)    k_mutex_unlock(m)
-#define pthread_mutex_destroy(m)   (void)(m)
-/* pthread_t → k_tid_t */
-#define pthread_t                  k_tid_t
-#define pthread_attr_t             int
-#define pthread_attr_init(a)       0
-#define pthread_attr_setstacksize(a, s) 0
-#define pthread_attr_destroy(a)
-#define pthread_create(tid, attr, fn, arg)  \
-    (*(tid) = k_thread_create(&_pthread_stack, _pthread_stack_size, \
-     (k_thread_entry_t)(fn), (arg), NULL, NULL, \
-     K_LOWEST_APPLICATION_THREAD_PRIO, 0, K_NO_WAIT), 0)
-#define pthread_setname_np(tid, name)
-/* Per-file static stack for simple pthread_create usage */
-static K_THREAD_STACK_DEFINE(_pthread_stack, 4096);
-static const int _pthread_stack_size = 4096;
-#else
-#include <pthread.h>
-#endif
+#include <pthread_compat.h>
 #include <stdbool.h>
 
 #if defined(CONFIG_NET)
@@ -655,8 +627,8 @@ private:
 	pthread_mutex_t         _radio_status_mutex {};
 
 	/* Phase 1 stub params: no parameter system integration, use hardcoded defaults */
-	struct _StubParamInt { int _v; _StubParamInt(int v) : _v(v) {} int get() const { return _v; } void commit() {} void commit_no_notification() {} };
-	struct _StubParamBool { bool _v; _StubParamBool(bool v) : _v(v) {} bool get() const { return _v; } void commit() {} void commit_no_notification() {} };
+	struct _StubParamInt { int _v; _StubParamInt(int v) : _v(v) {} int get() const { return _v; } void commit() {} void commit_no_notification() {} void set(int) {} };
+	struct _StubParamBool { bool _v; _StubParamBool(bool v) : _v(v) {} bool get() const { return _v; } void commit() {} void commit_no_notification() {} void set(int) {} };
 	_StubParamInt _param_mav_sys_id{1};
 	_StubParamInt _param_mav_comp_id{1};
 	_StubParamInt _param_mav_proto_ver{0};

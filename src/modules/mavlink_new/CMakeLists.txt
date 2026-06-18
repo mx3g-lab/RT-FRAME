@@ -75,6 +75,8 @@ if(CONFIG_RTFRAME_MAVLINK)
     )
 
     zephyr_library_compile_options(-Wno-enum-compare -Wno-cast-align -Wno-sign-compare)
+    # GNU extensions needed for PX4 param_macros.h ##__VA_ARGS__ pattern
+    zephyr_library_compile_options(-std=gnu++17)
 
     zephyr_library_link_libraries(
         rtframe_hrt

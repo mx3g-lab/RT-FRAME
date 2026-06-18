@@ -58,6 +58,8 @@ public:
 	}
 
 private:
+	struct _StubParam { int _v; _StubParam(int v=0) : _v(v) {} int get() const { return _v; } };
+
 	explicit MavlinkStreamUavionixADSBOutDynamic(Mavlink *mavlink) : ModuleParams(nullptr), MavlinkStream(mavlink) {}
 
 
@@ -65,10 +67,6 @@ private:
 	uORB::Subscription _vehicle_air_data_sub{ORB_ID(vehicle_air_data)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 
-	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::ADSB_SQUAWK>)		_adsb_squawk,
-		(ParamInt<px4::params::ADSB_EMERGC>)		_adsb_emergc
-	);
 
 
 	bool send() override

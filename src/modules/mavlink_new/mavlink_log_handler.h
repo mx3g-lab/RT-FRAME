@@ -40,7 +40,8 @@
 #include <perf/perf_counter.h>
 #include "mavlink_bridge_header.h"
 
-/* Zephyr newlib does not provide DT_REG/DT_DIR in <dirent.h> — fallback */
+/* DT_REG/DT_DIR: from host glibc (enum) or Zephyr fallback (macro) */
+#include <dirent.h>
 #ifndef DT_REG
 #define DT_REG 8
 #endif

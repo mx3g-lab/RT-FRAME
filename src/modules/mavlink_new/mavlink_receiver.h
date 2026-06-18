@@ -478,7 +478,6 @@ private:
 	hrt_abstime _heartbeat_component_uart_bridge{0};
 
 	/* Battery params not in RTFrame param system — empty for Phase 1 */
-	DEFINE_PARAMETERS();
 
 	// Disallow copy construction and move assignment.
 	MavlinkReceiver(const MavlinkReceiver &) = delete;

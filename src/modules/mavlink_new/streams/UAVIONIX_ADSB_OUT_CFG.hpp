@@ -55,6 +55,8 @@ public:
 	}
 
 private:
+	struct _StubParam { int _v; _StubParam(int v=0) : _v(v) {} int get() const { return _v; } };
+
 	explicit MavlinkStreamUavionixADSBOutCfg(Mavlink *mavlink) : ModuleParams(nullptr), MavlinkStream(mavlink)
 	{
 		param_t param_fw_airspd_stall = param_find("FW_AIRSPD_STALL");
@@ -89,14 +91,6 @@ private:
 
 	}
 
-	DEFINE_PARAMETERS(
-		(ParamInt<px4::params::ADSB_ICAO_ID>)		_adsb_icao,
-		(ParamInt<px4::params::ADSB_LEN_WIDTH>)		_adsb_len_width,
-		(ParamInt<px4::params::ADSB_EMIT_TYPE>)		_adsb_emit_type,
-		(ParamInt<px4::params::ADSB_GPS_OFF_LAT>)	_adsb_gps_offset_lat,
-		(ParamInt<px4::params::ADSB_GPS_OFF_LON>)	_adsb_gps_offset_lon,
-		(ParamInt<px4::params::ADSB_CALLSIGN_1>)	_adsb_callsign_part1,
-		(ParamInt<px4::params::ADSB_CALLSIGN_2>)	_adsb_callsign_part2
 	);
 
 	uint16_t _stall_speed{0}; // [cm/s]

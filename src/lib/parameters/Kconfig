@@ -1,6 +1,7 @@
 menuconfig RTFRAME_PARAM
 	bool "Parameter system"
 	default n
+	depends on RTFRAME_UORB
 	help
 	  Enable the PX4-compatible parameter system with BSON file storage.
 

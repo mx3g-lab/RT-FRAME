@@ -7,12 +7,20 @@
 #pragma once
 
 #include <stdint.h>
+#include <log.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef int dm_item_t;
+typedef int dm_function_t;
+
+struct px4_pollfd_struct_t {
+	int fd;
+	short events;
+	short revents;
+};
 
 #define DM_KEY_WAYPOINTS_OFFBOARD_0  0
 #define DM_KEY_WAYPOINTS_OFFBOARD_1  1

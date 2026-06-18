@@ -25,6 +25,19 @@ static inline int px4_prctl(int option, const char *name, int pid)
 	return 0;
 }
 
+/* Board UUID stubs */
+#define PX4_CPU_UUID_BYTE_LENGTH 12
+#define PX4_CPU_UUID_WORD32_UNIQUE_M  1
+#define PX4_CPU_UUID_WORD32_UNIQUE_H  2
+typedef uint32_t uuid_uint32_t[PX4_CPU_UUID_BYTE_LENGTH/4];
+typedef uint8_t  px4_guid_t[16];
+static inline void board_get_uuid32(uuid_uint32_t uid) {
+	for (int i = 0; i < (PX4_CPU_UUID_BYTE_LENGTH/4); i++) uid[i] = (uint32_t)(0xdead0000 + i);
+}
+static inline void board_get_px4_guid(px4_guid_t guid) {
+	for (int i = 0; i < 16; i++) guid[i] = (uint8_t)i;
+}
+
 #ifdef __cplusplus
 }
 #endif

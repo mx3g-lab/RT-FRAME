@@ -36,7 +36,7 @@
 
 #include <uORB/topics/figure_eight_status.h>
 #include <mavlink.h>
-#include <mavlink/mavlink_stream.h>
+#include "../mavlink_stream.h"
 
 class MavlinkStreamFigureEightStatus : public MavlinkStream
 {

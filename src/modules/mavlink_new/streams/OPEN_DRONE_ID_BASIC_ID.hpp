@@ -35,7 +35,7 @@
 #define OPEN_DRONE_ID_BASIC_ID_HPP
 
 #include <uORB/topics/vehicle_status.h>
-#include <modules/mavlink/open_drone_id_translations.hpp>
+#include "../open_drone_id_translations.hpp"
 
 class MavlinkStreamOpenDroneIdBasicId : public MavlinkStream
 {

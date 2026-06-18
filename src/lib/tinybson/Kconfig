@@ -1,7 +1,7 @@
 menuconfig RTFRAME_TINYBSON
 	bool "TinyBSON library"
 	default n
-	depends on POSIX_API
+	depends on POSIX_API || ARCH_POSIX
 	help
 	  Enable the TinyBSON serialization library.
 	  Requires POSIX file I/O (open/read/write/lseek/fsync).

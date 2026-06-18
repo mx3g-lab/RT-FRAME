@@ -41,6 +41,7 @@
  */
 
 #include <termios.h>
+#include <fcntl.h>
 
 #ifdef CONFIG_NET
 #include <arpa/inet.h>

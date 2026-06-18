@@ -39,7 +39,7 @@
 #include <hrt/hrt.h>
 #include <px4_atomic.h>
 /* px4_platform_common/events.h — stubbed for Zephyr */
-#include <pthread.h>
+#include <pthread_compat.h>
 
 using namespace time_literals;
 

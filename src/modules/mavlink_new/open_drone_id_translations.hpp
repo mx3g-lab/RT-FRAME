@@ -34,7 +34,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <mavlink/common/mavlink.h>
+#include <common/mavlink.h>
 
 namespace open_drone_id_translations
 {

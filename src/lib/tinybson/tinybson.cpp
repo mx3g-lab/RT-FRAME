@@ -38,7 +38,11 @@
  */
 
 #include <log/px4_log.h>
+#ifdef CONFIG_ARCH_POSIX
+#include <unistd.h>
+#else
 #include <zephyr/posix/unistd.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
