@@ -31,7 +31,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive
+        submodules: false
+
+    - name: Init build submodules
+      run: |
+        git submodule update --init --depth=1 \
+          middlewares/zephyr \
+          hardware/hal_nxp \
+          hardware/cmsis \
+          hardware/cmsis_6 \
+          hardware/fatfs \
+          src/modules/mavlink/mavlink \
+          src/lib/heatshrink/heatshrink
 
     - name: Set up Python 3.13
       uses: actions/setup-python@v5
