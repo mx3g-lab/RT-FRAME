@@ -32,5 +32,6 @@ rsource "timesync/Kconfig"
 rsource "dataman_client/Kconfig"
 rsource "adsb/Kconfig"
 rsource "tunes/Kconfig"
+rsource "variable_length_ringbuffer/Kconfig"
 
 endmenu # Libraries

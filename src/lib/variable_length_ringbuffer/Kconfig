@@ -1,0 +1,6 @@
+config RTFRAME_VARIABLE_LENGTH_RINGBUFFER
+	bool "Variable-length ring buffer library"
+	default y
+	help
+	  Enable the variable-length ring buffer implementation,
+	  supporting elements of varying sizes in a single buffer.
