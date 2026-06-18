@@ -21,4 +21,4 @@
 	url = https://github.com/mx3g-lab/heatshrink_px4.git
 [submodule ".claude/skills"]
 	path = .claude/skills
-	url = https://github.com/mx3g-lab/SKILLS.git
+	url = git@github.com:mx3g-lab/SKILLS.git
